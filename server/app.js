@@ -51,6 +51,15 @@ app.post('/updateStudent/:idStudent', (request, response) =>{
 	.catch(err=>console.log(err));
 })
 
+// delete Student
+app.delete('/deleteStudent/:idStudent', (request, response) =>{
+	const db = dbService.getDbServiceInstance();
+	const idStudent = request.params.idStudent;
+	const result = db.deleteStudent(idStudent);
+	result.then(data => response.json({success: true}))
+	.catch(err=>console.log(err));
+})
+
 // Get Professeurs
 app.get('/getProfesseurs', (request, response) => {
 	const db = dbService.getDbServiceInstance();

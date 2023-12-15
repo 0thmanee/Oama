@@ -64,37 +64,6 @@ const reloadContent = function()
 	loadingContent();
 }
 
-// Switch between Student Dashboard and teacher dashboard
-barBtns.addEventListener("click", function(e)
-{
-	e.preventDefault();
-	const clickedBtn = e.target.closest(".bar_link");
-	if (!clickedBtn)
-		return ;
-	document.querySelectorAll(".bar_link").forEach(
-		btn => btn.classList.remove("bar_link--active")
-	);
-	clickedBtn.classList.add("bar_link--active");
-	if (clickedBtn.classList.contains("bar_link--student"))
-	{
-		dashboards.forEach(dash=>dash.classList.add("hidden"));
-		mainDashboardStudent.classList.remove("hidden");
-		reloadContent();
-	}
-	else if (clickedBtn.classList.contains("bar_link--teacher"))
-	{
-		dashboards.forEach(dash=>dash.classList.add("hidden"));
-		mainDashboardTeacher.classList.remove("hidden");
-		reloadContent();
-	}
-	else if (clickedBtn.classList.contains("bar_link--grp"))
-	{
-		dashboards.forEach(dash=>dash.classList.add("hidden"));
-		mainDashboardGrps.classList.remove("hidden");
-		reloadContent();
-	}
-})
-
 // Switch Users dashboard and Add user form
 const switchStudent = function()
 {
@@ -112,31 +81,6 @@ const switchTeacher = function()
 addBtnStudent.forEach(btn=>btn.addEventListener("click", switchStudent))
 addBtnTeacher.forEach(btn=>btn.addEventListener("click", switchTeacher))
 
-// show profile
-studentProfileBtn.forEach(btn=>{
-	btn.addEventListener("click", function()
-	{
-		dashboards.forEach(dash=>dash.classList.add("hidden"));
-		dashboardStudentProfile.classList.remove("hidden");
-		reloadContent();
-	})
-})
-teacherProfileBtn.forEach(btn=>{
-	btn.addEventListener("click", function()
-	{
-		dashboards.forEach(dash=>dash.classList.add("hidden"));
-		dashboardTeacherProfile.classList.remove("hidden");
-		reloadContent();
-	})
-})
-
-// Show grp details
-grpBtn.forEach(btn=>btn.addEventListener("click", function()
-{
-	dashboards.forEach(dash=>dash.classList.add("hidden"));
-	mainDashboardDispGrps.classList.remove("hidden");
-	reloadContent();
-}))
 // Edit Field
 
 inputToEdit.forEach(inp=>inp.addEventListener("click", function(e){
@@ -160,37 +104,3 @@ inputToEdit.forEach(inp=>inp.addEventListener("click", function(e){
 		}
 	}
 }))
-
-// Subscription Content hide and show
-subscsContainer.addEventListener("click",function(e)
-{
-	let nbrEls = 0;
-	const clicked = e.target.closest(".subsc_box");
-	if (!clicked)
-		return ;
-	clicked.querySelector(".subsc_content").classList.toggle("subsc_content--active");
-})
-/* subscsContainer.addEventListener("click",function(e)
-{
-	let nbrEls = 0;
-	const clicked = e.target.closest(".subsc_box");
-	if (!clicked)
-		return ;
-	const contentEl = clicked.querySelector(".subsc_content");
-	contentEl.querySelectorAll(".subsc_row").forEach(el=>{
-		nbrEls++;
-	})
-	if (contentEl.classList.contains("subsc_content--active"))
-	{
-		console.log(1);
-		contentEl.style.height = 0;
-		contentEl.classList.remove("subsc_content--active");
-	}
-	else
-	{
-		const newHeight = (19 + 32) * nbrEls;
-		contentEl.style.height = newHeight + 'px';
-		contentEl.classList.add("subsc_content--active");
-	}
-	
-}) */

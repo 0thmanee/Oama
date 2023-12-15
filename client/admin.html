@@ -363,7 +363,7 @@
               </div>
           </form>
         </section>
-        <section class="dashboard_container profile--student hidden">
+        <section class="dashboard_container profile--student  hidden">
           <div class="dash_bar flex">
             <div class="dash_header">
               <h3>Profil de l'etudiant</h3>
@@ -378,6 +378,7 @@
                   <li data-formation="Developement" class="formation_choice formation_choice--developement">Developement</li>
                 </ul>
               </div>
+              <!-- <button class="dash_btn add_btn delete_student_btn flex"><span>Supprimer</span><i class="fa-solid fa-user-minus"></i></button> -->
 
             </div>
           </div>
@@ -799,7 +800,7 @@
           <i class="hide_popup_btn-2 fa-solid fa-xmark"></i>
         </div>
         <div class="price_display flex">
-          <span>Prix a Payer</span>
+          <span>Prix a Supprimer</span>
           <p class="price">1500 MAD</p>
         </div>
         <div class="price_btns flex">
@@ -809,15 +810,23 @@
       </div>
       <div class="thanks_popup thanks_popup--student flex hidden">
         <div class="cercle flex"><i class="fa-solid fa-check"></i></div>
-        <h2>Done!</h2>
+        <h2>Terminé!</h2>
         <p class="parag">
           Étudiant ajouté avec succès
         </p>
         <button class="popup_btn">OK</button>
       </div>
+      <div class="thanks_popup thanks_popup--delete_student flex hidden">
+        <div class="cercle flex"><i class="fa-solid fa-check"></i></div>
+        <h2>Terminé!</h2>
+        <p class="parag">
+          Étudiant Supprimé avec succès
+        </p>
+        <button class="popup_btn_del_std">OK</button>
+      </div>
       <div class="thanks_popup thanks_popup--prof flex hidden">
         <div class="cercle flex"><i class="fa-solid fa-check"></i></div>
-        <h2>Done!</h2>
+        <h2>Terminé!</h2>
         <p class="parag">
           Professeur ajouté avec succès
         </p>
@@ -825,7 +834,7 @@
       </div>
       <div class="thanks_popup thanks_popup--update_student flex hidden">
         <div class="cercle flex"><i class="fa-solid fa-check"></i></div>
-        <h2>Done!</h2>
+        <h2>Terminé!</h2>
         <p class="parag">
           Les informations de l'étudiant ont été mises à jour avec succès.
         </p>
@@ -850,7 +859,7 @@
       </div>
       <div class="thanks_popup thanks_popup--update_student flex hidden">
         <div class="cercle flex"><i class="fa-solid fa-check"></i></div>
-        <h2>Done!</h2>
+        <h2>Terminé!</h2>
         <p class="parag">
           Séances ajoutées avec succès
         </p>

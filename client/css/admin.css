@@ -127,6 +127,9 @@ color: var(--p-color2);
 	border-radius: 2rem;
 	gap: 1rem;
 }
+.delete_student_btn{
+	background-color: #ff3333;
+}
 .add_btn span{
 	font-size: 1.6rem;
 }

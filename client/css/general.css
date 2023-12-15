@@ -229,7 +229,7 @@ input {
   margin-bottom: 5.2rem;
   text-align: center;
 }
-.popup_btn {
+.popup_btn, .popup_btn_del_std {
   font-size: 2rem;
   font-family: inherit;
   color: inherit;

@@ -1,4 +1,3 @@
-
 // Objective: manage the professor dashboard
 const dashboardProfProfile = document.querySelector(".profile--teacher");
 const firstNameProfProfile = dashboardProfProfile.querySelector(".first_name_input");
@@ -28,23 +27,22 @@ let allgroups_Data = [];
 let professeur_Data = [];
 let group_Data = [];
 let etudiants_Data = [];
-// let etudiantsAbsents = [];
-// localStorage.setItem('idProf',1);
+
+const idProf = localStorage.getItem("idProf");
+if (!idProf)
+  	window.location.href = "./404.html";
 
 const dateActuelle = new Date();
-
 
 //get groups by idprof
 fetch(`http://localhost:5000/getGroup/${localStorage.getItem('idProf')}`)
   .then(response => response.json())
   .then(group => {
-    //console.log(group)
     allgroups_Data = [...group.data];
   })
     .then(() => {
 	dashContentgroup.innerHTML = "";
     allgroups_Data.forEach(group=>{
-        //console.log(group);
         if (group.Statut === "Active") {
 		const htmlEl = `
         <div data-id=${group.Id_Group} class="grp_box grp-${group.TypeFormation.toLowerCase()}">
@@ -107,11 +105,9 @@ dashContentgroup.addEventListener("click", function(e)
     .then(response => response.json())
     .then(group => {
         group_Data = [...group.data];
-        // console.log(group_Data);
         group_Data.forEach(etudiant => {
             list_students.push(etudiant.prenomEtudant + " " + etudiant.nomEtudiant);
         })
-        // console.log(list_students);
     })
     .then(() => {
          if(grpClicked.Statut === "Active"){
@@ -174,9 +170,6 @@ profilBtn.addEventListener("click", function(e)
     .then(professeur => {
         professeur_Data = [...professeur.data];
     })
-    // .then(() => {
-    //     console.log(professeur_Data);}
-    // )
     .then(() => {
         firstNameProfProfile.value = professeur_Data[0].Nom;
         lastNameProfProfile.value = professeur_Data[0].Prenom;
@@ -192,7 +185,7 @@ profilBtn.addEventListener("click", function(e)
 // check if the date of seance is actual date
 function verifierAbsence(group) {
     var date = new Date();
-    var actuelJour = date.getDay(); // Use getDay() to get the day of the week (0 for Sunday, 1 for Monday, ..., 6 for Saturday)
+    var actuelJour = date.getDay(); // (0 for Sunday, 1 for Monday, ..., 6 for Saturday)
     var actuelHeure = date.getHours();
     var jours = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
     var heureDeScience = (group.N_Seance == 2) ? 19 : 17;
@@ -220,9 +213,6 @@ dashboarddisplaygroup.addEventListener("click", function(e) {
     .then(etudiants => {
         etudiants_Data = [...etudiants.data];
     })
-    // .then(() => {
-    //     console.log(etudiants_Data);
-    // })
     .then(() => {
         listeAbs.innerHTML = "";
         etudiants_Data.forEach(etudiant => {
@@ -245,47 +235,33 @@ dashboarddisplaygroup.addEventListener("click", function(e) {
 })
 
 const checkAbsence = function(numDossier,idgroup) {
-    // console.log(numDossier,idgroup);
     fetch(`http://localhost:5000/checkAbsence/${numDossier}/${idgroup}`)
     .then(response => response.json())
-    // .then(absence => {
-    //     console.log(absence);
-    // })
 }
 
 const decreaceSeance = function(numDossier,idgroup) {
-    // console.log(numDossier,idgroup);
     fetch(`http://localhost:5000/decreaceSeance/${numDossier}/${idgroup}`)
     .then(response => response.json())
-    // .then(absence => {
-    //     console.log(absence);
-    // })
 }
 
 const checkGroupEtat = function(idgroup) {
     fetch(`http://localhost:5000/checkGroupEtat/${idgroup}`)
     .then(response => response.json())
-    // .then(absence => {
-    //     console.log(absence);
-    // })
 }
 submitAbsenceBtn.addEventListener("click", function(e) {
     e.preventDefault();
-    // const etudiantsAbsents = [];
     const etudiants = document.querySelectorAll(".abs_list_item input[type='checkbox']");
     etudiants.forEach(etudiant => {
-        // console.log(etudiant);
         if (etudiant.checked) {
             checkAbsence(etudiant.id,group_Data[0].Id_Group);
-            // etudiantsAbsents.push(etudiant.id,);
         }
         else {
             decreaceSeance(etudiant.id,group_Data[0].Id_Group);
         }
         checkGroupEtat(group_Data[0].Id_Group);
-        // All_etudiants.push(etudiant.id,)
     })
 });
+
 // Logout from dashboard
 
 logoutBtn.addEventListener("click", function(e) {

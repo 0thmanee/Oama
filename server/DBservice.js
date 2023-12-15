@@ -10,7 +10,7 @@ let instance = null;
 dotenv.config();
 const connection = mysql.createConnection({
 	host: process.env.HOST,
-	user: process.env.USER,
+	user: 'sql8667778',
 	password: process.env.PASSWORD,
 	database: process.env.DATABASE
 })
@@ -169,6 +169,70 @@ class DbService {
 		  console.log(error);
 		}
 	}
+
+	// Delete Student
+	// async deleteStudent(studentId) {
+	// 	try {
+	// 		// Delete student from Seance table
+	// 		await new Promise((resolve, reject) => {
+	// 			const deleteSeanceQuery = "DELETE FROM Seance WHERE Num_Dossier IN (SELECT numDossier FROM Dossier WHERE IdEtudiant = ?)";
+	// 			connection.query(deleteSeanceQuery, [studentId], (err, result) => {
+	// 				if (err) reject(new Error(err.message));
+	// 				resolve(result);
+	// 			});
+	// 		});
+
+	// 		// Delete student from Seance_restant table
+	// 		await new Promise((resolve, reject) => {
+	// 			const deleteSeancesRestantQuery = "DELETE FROM Seance_restant WHERE numDossier IN (SELECT numDossier FROM Dossier WHERE IdEtudiant = ?)";
+	// 			connection.query(deleteSeancesRestantQuery, [studentId], (err, result) => {
+	// 				if (err) reject(new Error(err.message));
+	// 				resolve(result);
+	// 			});
+	// 		});
+
+	// 		// Delete student from Dossier table
+	// 		await new Promise((resolve, reject) => {
+	// 			const deleteDossiersQuery = "DELETE FROM Dossier WHERE IdEtudiant = ?";
+	// 			connection.query(deleteDossiersQuery, [studentId], (err, result) => {
+	// 				if (err) reject(new Error(err.message));
+	// 				resolve(result);
+	// 			});
+	// 		});
+
+	// 		// Decrease the number of students in the corresponding groups
+	// 		const decreaseGroupStudentsResult = await new Promise((resolve, reject) => {
+	// 			const decreaseGroupStudentsQuery =
+	// 				"UPDATE Groupe SET nbr_Etudiant = nbr_Etudiant - 1 WHERE Id_Group IN (SELECT Id_Group FROM (SELECT DISTINCT Groupe.Id_Group FROM Groupe, Seance, Dossier WHERE Groupe.Id_Group = Seance.Id_Group AND Seance.Num_Dossier = Dossier.numDossier AND Dossier.IdEtudiant = ?) AS subquery)";
+	// 			connection.query(decreaseGroupStudentsQuery, [Number(studentId)], async (err, result) => {
+	// 				if (err) reject(new Error(err.message));
+	// 				resolve(result);
+	// 			});
+	// 		});
+
+	// 		// Check if nbr_Etudiant is 0 for any group and delete it
+	// 		const deleteEmptyGroupsResult = await new Promise((resolve, reject) => {
+	// 			const deleteEmptyGroupsQuery = "DELETE FROM Groupe WHERE Id_Group IN (SELECT Id_Group FROM Groupe WHERE nbr_Etudiant = 0)";
+	// 			connection.query(deleteEmptyGroupsQuery, (err, result) => {
+	// 				if (err) reject(new Error(err.message));
+	// 				resolve(result);
+	// 			});
+	// 		});
+
+	// 		// Delete student from Etudiant table
+	// 		const deleteStudentResult = await new Promise((resolve, reject) => {
+	// 			const deleteStudentQuery = "DELETE FROM Etudiant WHERE IdEtudiant = ?";
+	// 			connection.query(deleteStudentQuery, [studentId], (err, result) => {
+	// 				if (err) reject(new Error(err.message));
+	// 				resolve(result);
+	// 			});
+	// 		});
+
+	// 		return deleteStudentResult;
+	// 	} catch (error) {
+	// 		console.log(error);
+	// 	}
+	// }
 
 	// Get Professeurs
 	async getProfesseursData() {
@@ -414,7 +478,7 @@ class DbService {
 			});
 
 			const response = await new Promise((resolve, reject) => {
-				const query = "select distinct Groupe.Id_Group, Groupe.Jour_seance, Groupe.Num_seance from Groupe, Seance, Dossier, Etudiant where Groupe.Id_Group=Seance.Id_Group AND Seance.Num_Dossier = Dossier.numDossier and Dossier.IdEtudiant = Etudiant.IdEtudiant and Groupe.Statut= 'Inactive' and Groupe.Id_Matier= ? and Groupe.nbr_Etudiant > 3 and Groupe.nbr_Etudiant < 8 and Etudiant.Niveau = ?";
+				const query = "select distinct Groupe.Id_Group, Groupe.Jour_seance, Groupe.Num_seance from Groupe, Seance, Dossier, Etudiant where Groupe.Id_Group=Seance.Id_Group AND Seance.Num_Dossier = Dossier.numDossier and Dossier.IdEtudiant = Etudiant.IdEtudiant and Groupe.Statut= 'Active' and Groupe.Id_Matier= ? and Groupe.nbr_Etudiant > 3 and Groupe.nbr_Etudiant < 8 and Etudiant.Niveau = ?";
 				const values = [IdMatiere, niveau];
 				connection.query(query, values, (err, results) => {
 					if (err) reject(new Error(err.message));
@@ -462,15 +526,15 @@ class DbService {
 				});
 			});
 
-			if (group.nbr_Etudiant >= 4) {
-				await new Promise((resolve, reject) => {
-					const query = "UPDATE Groupe SET Statut = 'Active' WHERE Id_Group = ?";
-					connection.query(query, [seance.Id_Group], (err, result) => {
-						if (err) reject(err);
-						resolve(result);
-					});
-				});
-			}
+			// if (group.nbr_Etudiant >= 4) {
+			// 	await new Promise((resolve, reject) => {
+			// 		const query = "UPDATE Groupe SET Statut = 'Active' WHERE Id_Group = ?";
+			// 		connection.query(query, [seance.Id_Group], (err, result) => {
+			// 			if (err) reject(err);
+			// 			resolve(result);
+			// 		});
+			// 	});
+			// }
 			const insertResult = await new Promise((resolve, reject) => {
 				const query = "INSERT INTO Seance (Id_Group, Num_Dossier, Nbr_Abscence) VALUES (?, ?, ?)";
 				const values = [seance.Id_Group, seance.Num_Dossier, 0];
@@ -499,17 +563,17 @@ class DbService {
 			});
 
 			let group = await new Promise((resolve, reject) => {
-				const query = "Select Distinct Groupe.Id_Group FROM Groupe,Etudiant,Dossier,Seance,Seance_restant,Matiere where Etudiant.Niveau= ? AND Matiere.id_Matier = ? AND Dossier.IdEtudiant=Etudiant.IdEtudiant AND Dossier.numDossier = Seance_restant.numDossier AND Dossier.numDossier = Seance.Num_Dossier AND Seance.Id_Group = Groupe.Id_Group AND Seance_restant.IdMatiere=Matiere.Id_Matier";
+				const query = "Select Distinct Groupe.Id_Group FROM Groupe,Etudiant,Dossier,Seance,Seance_restant,Matiere where Dossier.IdEtudiant=Etudiant.IdEtudiant AND Dossier.numDossier = Seance_restant.numDossier AND Dossier.numDossier = Seance.Num_Dossier AND Seance.Id_Group = Groupe.Id_Group AND Seance_restant.IdMatiere=Groupe.Id_Matier AND Groupe.Statut = 'Inactive' AND Etudiant.Niveau= ? AND Groupe.id_Matier = ?";
 				connection.query(query, [niveau, seance.Id_Matier], (err, result) => {
 					if (err) reject(err);
 					resolve(result[0]);
 				});
 			});
+			console.log(group);
 
 			let updateResult;
 			if (group) {
 				const groupId = group.Id_Group;
-
 				updateResult = await new Promise((resolve, reject) => {
 					const query = "UPDATE Groupe SET nbr_Etudiant = nbr_Etudiant + 1 WHERE Id_Group = ?";
 					connection.query(query, [groupId], (err, result) => {
@@ -520,6 +584,7 @@ class DbService {
 			}
 
 			else {
+				console.log("not found group");
 				const insertId = await new Promise((resolve, reject) => {
 					const query = "INSERT INTO Groupe (Id_Matier, Statut, nbr_Etudiant) VALUES (?, ?, ?)";
 					const values = [seance.Id_Matier, 'Inactive', 1];
@@ -666,7 +731,11 @@ class DbService {
 						AND Groupe.Jour_seance = ?
 						AND Groupe.Num_seance = ?
 					)
-					ORDER BY RAND()
+					AND (
+						SELECT COUNT(*)
+						FROM Groupe
+						WHERE Groupe.Matricule = Professeur.Matricule
+					) <= 3
 					LIMIT 1
 				`;
 				const values = [idMatiere, idMatiere, Jour, Num_Seance];
@@ -685,8 +754,8 @@ class DbService {
 	async getSeancesById(IdEtudiant, typeF) {
 		try {
 			const response = await new Promise((resolve, reject) => {
-				const query = "SELECT DISTINCT Groupe.Id_Group, Matiere.Nom_Matier, Seance_restant.NbrSeanceRestant FROM Groupe JOIN Seance ON Groupe.Id_Group = Seance.Id_Group JOIN Matiere ON Groupe.Id_Matier = Matiere.Id_Matier JOIN Seance_restant ON Seance.Num_Dossier = Seance_restant.numDossier JOIN Dossier ON Dossier.NumDossier = Seance_restant.numDossier WHERE Dossier.TypeFormation = ? AND Dossier.IdEtudiant = ?;";
-				connection.query(query, [typeF, IdEtudiant], (err, results) => {
+				const query = "SELECT DISTINCT Groupe.Id_Group,Matiere.Nom_Matier,Seance_restant.NbrSeanceRestant FROM Groupe,Matiere,Seance,Dossier,Seance_restant WHERE Dossier.IdEtudiant= ? AND Dossier.numDossier = Seance.Num_Dossier AND Seance.Id_Group=Groupe.Id_Group AND Dossier.numDossier = Seance_restant.numDossier AND Seance_restant.IdMatiere = Matiere.Id_Matier AND Groupe.Id_Matier=Matiere.id_Matier AND Dossier.TypeFormation = ?;";
+				connection.query(query, [IdEtudiant, typeF], (err, results) => {
 					if (err) reject(new Error(err.message));
 					resolve(results);
 				});
@@ -780,8 +849,8 @@ class DbService {
 	async getEtudiants(id_group) {
 		try{
 			const response = await new Promise((resolve, reject)=>{
-				const query = "SELECT Etudiant.IdEtudiant,Etudiant.Nom, Etudiant.Prenom,Dossier.numDossier FROM Seance JOIN Dossier ON Dossier.numDossier = Seance.Num_Dossier JOIN Etudiant ON Dossier.IdEtudiant = Etudiant.IdEtudiant WHERE Seance.Id_Group =?; ";
-				connection.query(query,id_group, (err, results) => {
+				const query = "SELECT Etudiant.IdEtudiant, Etudiant.Nom, Etudiant.Prenom, Dossier.numDossier FROM Seance JOIN Dossier ON Dossier.numDossier = Seance.Num_Dossier JOIN Etudiant ON Dossier.IdEtudiant = Etudiant.IdEtudiant JOIN Seance_restant ON Seance_restant.numDossier = Dossier.numDossier WHERE Seance.Id_Group = ? AND Seance_restant.IdMatiere = (SELECT Id_Matier from Groupe WHERE Id_Group = ?) AND Seance_restant.NbrSeanceRestant > 0;";
+				connection.query(query,[id_group,id_group], (err, results) => {
 					if (err) reject(new Error(err.message));
 					resolve(results);
 				})
@@ -802,7 +871,6 @@ class DbService {
 					resolve(results);
 				})
 			})
-			// Add the new query here
 			const updateQuery = "UPDATE Seance SET Nbr_Abscence = Nbr_Abscence + 1 WHERE Id_Group = ? AND Num_Dossier = ?;";
 			connection.query(updateQuery,[idGroup,numDossier], (err, results) => {
 				if (err) console.log(err.message);

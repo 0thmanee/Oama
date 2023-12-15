@@ -18,9 +18,15 @@ const payBtn = document.querySelector(".pay_btn--prim");
 const hidePayBtn = document.querySelector(".pay_btn--sec");
 const payBtnThanks = document.querySelector(".thanks_popup--update_student").querySelector(".popup_btn");
 const subsContainer = document.querySelector(".subscs_container");
+const deleteStudentBtn = document.querySelector(".delete_student_btn");
+const deleteStudentHide = document.querySelector(".popup_btn_del_std");
+const barBtns = document.querySelector(".bar_list");
 const overlay = document.querySelector(".overlay");
 
 // Dashboards displaying
+const mainDashboardStudent = document.querySelector(".main_dashboard--student");
+const mainDashboardTeacher = document.querySelector(".main_dashboard--teacher");
+const mainDashboardGrps = document.querySelector(".main_dashboard--gprs");
 const dashContentStudents = document.querySelector(".dash_content--students");
 const studentsDashSelect = document.querySelector(".students_dash_select");
 const dashContentProfs = document.querySelector(".dash_content--teachers");
@@ -39,6 +45,7 @@ const levelEtd = addStudentForm.querySelector(".level_input");
 const emailEtd = addStudentForm.querySelector(".email_input");
 const addStudentBtn = document.querySelector(".submit_student");
 const addStudentPopup = document.querySelector(".thanks_popup--student");
+const deleteStudentPopup = document.querySelector(".thanks_popup--delete_student");
 const addProfPopup = document.querySelector(".thanks_popup--prof");
 
 // Add Prof form
@@ -133,40 +140,40 @@ const wait = function (seconds) {
   };
 
 // Display Students on the dashboard
-const displayStudents = function(formation)
+const displayStudents = async function(formation)
 {
 	const fetchDossiers = fetch('http://localhost:5000/getDossiers')
-	.then(response => response.json())
-	.then(dossiers => {
-	dossiersData = [...dossiers.data];
-	});
+		.then(response => response.json())
+		.then(dossiers => {
+			dossiersData = [...dossiers.data];
+		});
 
 	const fetchStudents = fetch('http://localhost:5000/getStudents')
-	.then(response => response.json())
-	.then(students => {
-	studentsData = [...students.data];
-	});
+		.then(response => response.json())
+		.then(students => {
+			studentsData = [...students.data];
+		});
 
 	const findFormation = function(studentId)
 	{
-	let count = 0;
-	let formation;
-	dossiersData.forEach(dossier=>{
-		if (dossier.IdEtudiant == studentId)
-		{	
-			count++;
-			formation = dossier.TypeFormation;
-		}
-	})
-	if (count == 1)
-		return formation;
-	else if (count > 1)
-		return "Multiformation";
-	else return "Nouveau";
+		let count = 0;
+		let formation;
+		dossiersData.forEach(dossier=>{
+			if (dossier.IdEtudiant == studentId)
+			{	
+				count++;
+				formation = dossier.TypeFormation;
+			}
+		})
+		if (count == 1)
+			return formation;
+		else if (count > 1)
+			return "Multiformation";
+		else return "Nouveau";
 	}
 
-	Promise.all([fetchDossiers, fetchStudents])
-	.then(() => {
+	await Promise.all([fetchDossiers, fetchStudents]);
+
 	dashContentStudents.innerHTML = "";
 	studentsData.forEach(student=>{
 		const f = findFormation(student.IdEtudiant);
@@ -174,17 +181,16 @@ const displayStudents = function(formation)
 		{
 			const htmlEl = `
 			<div data-id=${student.IdEtudiant} class="dash_box formation-${f == "Multiformation" || f == "Nouveau" ? "default" : f.toLowerCase()} flex">
-			<div class="box_icon flex"><i class="fa-solid fa-user"></i></div>
-			<div class="box_info">
-			<p class="user_name">${student.Prenom} ${student.Nom}</p>
-			<p class="user_formation">${f}</p>
-			<a href="#" class="user_btn student_profile_btn">Voir Profil</a>
-			</div>
+				<div class="box_icon flex"><i class="fa-solid fa-user"></i></div>
+				<div class="box_info">
+					<p class="user_name">${student.Prenom} ${student.Nom}</p>
+					<p class="user_formation">${f}</p>
+					<a href="#" class="user_btn student_profile_btn">Voir Profil</a>
+				</div>
 			</div>`;
 			dashContentStudents.insertAdjacentHTML("beforeend", htmlEl);
 		}
-	})
-	})
+	});
 }
 
 displayStudents("Tous");
@@ -231,6 +237,30 @@ addStudentForm.addEventListener("submit", function(e)
 	})
 })
 
+//remove student from DB
+// deleteStudentBtn.addEventListener("click", function(e){
+// 	e.preventDefault();
+// 	const fetchToRemoveStudent = fetch(`http://localhost:5000/deleteStudent/${idStudent}`, {
+// 		method: 'DELETE'
+// 	})
+// 	.then(response => response.json());
+// 	fetchToRemoveStudent.then(()=>{
+// 		displayStudents("Tous");
+// 		deleteStudentPopup.classList.remove("hidden");
+// 		overlay.classList.remove("hidden");
+// 	})
+// })
+
+deleteStudentHide.addEventListener("click", function(e){
+	e.preventDefault();
+	deleteStudentPopup.classList.add("hidden");
+	overlay.classList.add("hidden");
+	dashboards.forEach(dash=>dash.classList.add("hidden"));
+	displayStudents("Tous");
+	reloadContent();
+	mainDashboardStudent.classList.remove("hidden");
+})
+
 // Display Subscriptions
 const formationsBoxes = document.querySelectorAll(".subsc_content");
 const displaySubscriptions = async function(idStudent) {
@@ -241,7 +271,7 @@ const displaySubscriptions = async function(idStudent) {
 			const response = await fetch(`http://localhost:5000/getSeancesById/${idStudent}/${formation}`);
 			const seances = await response.json();
 			const seancesData = seances.data;
-			console.log(seancesData.length);
+			console.log(seancesData);
 
 			let htmlContent = "";
 			if (seancesData.length > 0) {
@@ -258,7 +288,6 @@ const displaySubscriptions = async function(idStudent) {
 	}
 };
 
-
 // Show Student's Profile
 let idStudent
 const setProfileStudent = function(id)
@@ -273,6 +302,7 @@ const setProfileStudent = function(id)
 	emailEtdProfile.value = activeStudent.Mail;
 	levelEtdProfile.value = levels.includes(activeStudent.Niveau) ? activeStudent.Niveau : "none";
 }
+
 dashContentStudents.addEventListener("click", function(e)
 {
 	const clicked = e.target.closest(".student_profile_btn");
@@ -314,6 +344,7 @@ saveInfoStudent.addEventListener("click", function(e)
 		saveInfoStudent.querySelector("span").value = "Sauvegarder";
 		updateStudentPopup.classList.remove("hidden");
 		overlay.classList.remove("hidden");
+		displayStudents("Tous");
 	})
 })
 
@@ -413,6 +444,7 @@ const setProfileProf = function(id)
 	MatiereProfProfile.value = 1;
 }
 let idProf;
+
 dashContentProfs.addEventListener("click", function(e)
 {
 	const clicked = e.target.closest(".teacher_profile_btn");
@@ -470,73 +502,79 @@ const getGroups = fetch('http://localhost:5000/getGroups')
 })
 
 // display Groups
-const displayGroups = function(formation) {
-	Promise.all([getGroups, getFormations])
-		.then(([groups, formations]) => {
-			dashContentGroups.innerHTML = "";
-			groups.forEach(group => {
-				groupsData.push(group);
-				const professor = profsData.find(prof => prof.Matricule == group.Matricule);
-				const f = formations.find(f => f.Id_Group == group.Id_Group);
-				const matiere = matieresData.find(m => m.id_Matier == group.Id_Matier);
-				if (f && matiere && (formation == f.TypeFormation || formation == "Tous")) {
-					dashContentGroups.insertAdjacentHTML("beforeend", `
-						<div data-id=${group.Id_Group} class="grp_box grp-${f.TypeFormation.toLowerCase()}">
-							<div class="grp_box_header flex">
-								<h4></h4>
-								<span>${matiere.Nom_Matier}</span>
-							</div>
-							<ul class="grp_box_list">
-								<li class="box_list_item">
-									<p>ID du Groupe</p>
-									<p>${group.Id_Group}</p>
-								</li>
-								<li class="box_list_item">
-									<p>Status</p>
-									<p>${group.Statut}</p>
-								</li>
-								<li class="box_list_item">
-									<p>Nombre d'etudiants</p>
-									<p>${group.nbr_Etudiant}</p>
-								</li>
-								<li class="box_list_item">
-									<p>Professeur</p>
-									<p>${professor ? professor.Prenom + ' ' + professor.Nom : 'N/A'}</p>
-								</li>
-							</ul>
-							<a href="#" class="grp_btn">Voir Les Details</a>
+const displayGroups = async function(formation) {
+	try {
+		const [groups, formations] = await Promise.all([getGroups, getFormations]);
+		dashContentGroups.innerHTML = "";
+		groups.forEach(group => {
+			groupsData.push(group);
+			const professor = profsData.find(prof => prof.Matricule == group.Matricule);
+			const f = formations.find(f => f.Id_Group == group.Id_Group);
+			const matiere = matieresData.find(m => m.id_Matier == group.Id_Matier);
+			if (f && matiere && (formation == f.TypeFormation || formation == "Tous")) {
+				dashContentGroups.insertAdjacentHTML("beforeend", `
+					<div data-id=${group.Id_Group} class="grp_box grp-${f.TypeFormation.toLowerCase()}">
+						<div class="grp_box_header flex">
+							<h4></h4>
+							<span>${matiere.Nom_Matier}</span>
 						</div>
-					`);
-				}
-			});
-		})
+						<ul class="grp_box_list">
+							<li class="box_list_item">
+								<p>ID du Groupe</p>
+								<p>${group.Id_Group}</p>
+							</li>
+							<li class="box_list_item">
+								<p>Status</p>
+								<p>${group.Statut}</p>
+							</li>
+							<li class="box_list_item">
+								<p>Nombre d'etudiants</p>
+								<p>${group.nbr_Etudiant}</p>
+							</li>
+							<li class="box_list_item">
+								<p>Professeur</p>
+								<p>${professor ? professor.Prenom + ' ' + professor.Nom : 'N/A'}</p>
+							</li>
+						</ul>
+						<a href="#" class="grp_btn">Voir Les Details</a>
+					</div>
+				`);
+			}
+		});
+	} catch (error) {
+		console.error(error);
+	}
 }
 displayGroups("Tous");
 
 // Get Formation by Group
 const getFormationByGroup = function(groupId) {
-	return fetch(`http://localhost:5000/getFormateursByGroup/${groupId}`)
-		.then(response => response.json())
-		.then(formation => {
-			return formation.data;
-		})
-		.catch(error => {
-			console.error(error);
-			return [];
-		});
+	return new Promise((resolve, reject) => {
+		fetch(`http://localhost:5000/getFormateursByGroup/${groupId}`)
+			.then(response => response.json())
+			.then(formation => {
+				resolve(formation.data);
+			})
+			.catch(error => {
+				console.error(error);
+				reject([]);
+			});
+	});
 };
 
 // Fetch and display students by group
 const fetchStudentsByGroup = (id) => {
-	return fetch(`http://localhost:5000/getStudentsByGroup/${id}`)
-		.then(response => response.json())
-		.then(students => {
-			return students.data;
-		})
-		.catch(error => {
-			console.error(error);
-			return [];
-		});
+	return new Promise((resolve, reject) => {
+		fetch(`http://localhost:5000/getStudentsByGroup/${id}`)
+			.then(response => response.json())
+			.then(students => {
+				resolve(students.data);
+			})
+			.catch(error => {
+				console.error(error);
+				reject([]);
+			});
+	});
 };
 
 // Show Group's Profile
@@ -605,19 +643,25 @@ dashContentGroups.addEventListener("click", function(e) {
 
 // Create Group
 const createNewGroup = function(matiereId) {
-	return fetch("http://localhost:5000/insertGroup", {
-		headers: {
-			'Content-type': 'application/json'
-		},
-		method: 'POST',
-		body: JSON.stringify({
-			Id_Matier: matiereId
+	return new Promise((resolve, reject) => {
+		fetch("http://localhost:5000/insertGroup", {
+			headers: {
+				'Content-type': 'application/json'
+			},
+			method: 'POST',
+			body: JSON.stringify({
+				Id_Matier: matiereId
+			})
 		})
-	})
-	.then(response => response.json())
-	.then(data => {
-		console.log("Group added to the database:", data);
-		return data;
+		.then(response => response.json())
+		.then(data => {
+			console.log("Group added to the database:", data);
+			resolve(data);
+		})
+		.catch(error => {
+			console.error("Error adding group to the database:", error);
+			reject(error);
+		});
 	});
 }
 	
@@ -673,19 +717,24 @@ formationsChoices.addEventListener("click", function(e) {
 
 // Add Formation to DB
 const createNewDossier = function(formation, id){
-	return fetch("http://localhost:5000/insertDossier", {
-		headers: {
-			'Content-type' : 'application/json'
-		},
-		method: 'POST',
-		body: JSON.stringify({
-			IdEtudiant: id,
-			TypeFormation: formation
+	return new Promise((resolve, reject) => {
+		fetch("http://localhost:5000/insertDossier", {
+			headers: {
+				'Content-type' : 'application/json'
+			},
+			method: 'POST',
+			body: JSON.stringify({
+				IdEtudiant: id,
+				TypeFormation: formation
+			})
 		})
-	})
-	.then(response => response.json())
-	.then(dossier => {
-		return dossier.id;
+		.then(response => response.json())
+		.then(dossier => {
+			resolve(dossier.id);
+		})
+		.catch(error => {
+			reject(error);
+		});
 	});
 }
 
@@ -724,14 +773,14 @@ const createDossiersAndSeances = async function (formation, inputs, id) {
 	  console.error(error);
 	  throw error;
 	}
-  };
+};
 
 // Add Seances to DB
-const addSeances = function(sceances) {
-	return new Promise((resolve, reject) => {
+const addSeances = async function(sceances) {
+	try {
 		const areNews = [];
-		const promises = sceances.map(sceance => {
-			return fetch("http://localhost:5000/insertSeanceRestant", {
+		const promises = sceances.map(async (sceance) => {
+			const response = await fetch("http://localhost:5000/insertSeanceRestant", {
 				headers: {
 					'Content-type': 'application/json'
 				},
@@ -741,28 +790,24 @@ const addSeances = function(sceances) {
 					IdMatiere: sceance.matiere,
 					NbrSeance: sceance.inputValue
 				})
-			})
-			.then(response => response.json())
-			.then(result => {
-				if (result.error) {
-					errorPopups[1].classList.remove("hidden");
-					overlay.classList.remove("hidden");
-					reject(new Error("Error adding seances to the database"));
-					return [];
-				} else {
-					areNews.push(result.data.isNew);
-				}
-			})
+			});
+			const result = await response.json();
+			if (result.error) {
+				errorPopups[1].classList.remove("hidden");
+				overlay.classList.remove("hidden");
+				throw new Error("Error adding seances to the database");
+			} else {
+				areNews.push(result.data.isNew);
+			}
 		});
 
-		Promise.all(promises)
-			.then(results => {
-				resolve({results, areNews});
-				console.log("Data returned by /insertSeanceRestant:", results);
-				return areNews;
-			})
-			.catch(error => reject(error));
-	});
+		const results = await Promise.all(promises);
+		console.log("Data returned by /insertSeanceRestant:", results);
+		return { results, areNews };
+	} catch (error) {
+		console.error(error);
+		throw error;
+	}
 }
 
 // Check available groups
@@ -831,56 +876,75 @@ formationForm.addEventListener("click", function(e) {
 
 // Add to inactive groups
 const addToInactiveGrp = function(idMatiere, Id_Dossier) {
-	return fetch("http://localhost:5000/addToInactiveGroup", {
-		headers: {
-			'Content-type': 'application/json'
-		},
-		method: 'POST',
-		body: JSON.stringify({
-			Id_Matier: idMatiere,
-			Num_Dossier: Id_Dossier
+	return new Promise((resolve, reject) => {
+		fetch("http://localhost:5000/addToInactiveGroup", {
+			headers: {
+				'Content-type': 'application/json'
+			},
+			method: 'POST',
+			body: JSON.stringify({
+				Num_Dossier: Id_Dossier,
+				Id_Matier: idMatiere
+			})
 		})
-	})
-	.then(response => response.json())
-	.then(data => {
-		return data;
+		.then(response => response.json())
+		.then(data => {
+			resolve(data);
+		})
+		.catch(error => {
+			reject(error);
+		});
 	});
 }
 
 // Add Student to Group
 const addStudentToGroup = function(idGroup, idDossier) {
-	return fetch("http://localhost:5000/addDossierToGroup", {
-		headers: {
-			'Content-type': 'application/json'
-		},
-		method: 'POST',
-		body: JSON.stringify({
-			Id_Group: idGroup,
-			Id_Dossier: idDossier
+	return new Promise((resolve, reject) => {
+		fetch("http://localhost:5000/addDossierToGroup", {
+			headers: {
+				'Content-type': 'application/json'
+			},
+			method: 'POST',
+			body: JSON.stringify({
+				Id_Group: idGroup,
+				Id_Dossier: idDossier
+			})
 		})
-	})
-	.then(response => response.json())
-	.then(data => {
-		return data;
+		.then(response => response.json())
+		.then(data => {
+			resolve(data);
+		})
+		.catch(error => {
+			reject(error);
+		});
 	});
 }
 // Find Group Place
 const findGrpPlace = function(idGroup) {
-	const grpInfos = [];
-	return fetch(`http://localhost:5000/getInfosForGroup/${idGroup}`)
-		.then(response => response.json())
-		.then(infos => {
-			return infos.data;
-		});
+	return new Promise((resolve, reject) => {
+		fetch(`http://localhost:5000/getInfosForGroup/${idGroup}`)
+			.then(response => response.json())
+			.then(infos => {
+				resolve(infos.data);
+			})
+			.catch(error => {
+				reject(error);
+			});
+	});
 }
 
 // Finf Prof for Group
 const findProfForGroup = function(idMatiere, Jour, Num_seance) {
-	return fetch(`http://localhost:5000/getProfForGroup/${idMatiere}/${Jour}/${Num_seance}`)
-		.then(response => response.json())
-		.then(prof => {
-			return prof.data;
-		});
+	return new Promise((resolve, reject) => {
+		fetch(`http://localhost:5000/getProfForGroup/${idMatiere}/${Jour}/${Num_seance}`)
+			.then(response => response.json())
+			.then(prof => {
+				resolve(prof.data);
+			})
+			.catch(error => {
+				reject(error);
+			});
+	});
 }
 
 // Check Activated Groups
@@ -928,15 +992,14 @@ payBtn.addEventListener("click", function() {
 	if (isDone) return;
 	payBtn.textContent = ".....";
 	isDone = 1;
-	let areNews = [];
 	let index = 0;
 	createDossiersAndSeances(activeFormation, inputs, idStudent).then(data => {
-		displayStudents("Tous");
 		const processData = async function(data, areNews) {
+			console.log("New Seance", areNews);
 			for (const sceance of data) {
 				try {
 					if (areNews[index] == 1) {
-						console.log("New Group", areNews[index - 1]);
+						console.log("New Seance");
 						const grp = await checkAvailableGroups(sceance.matiere, sceance.idDossier);
 						if (grp.length) {
 							await addStudentToGroup(grp[0].Id_Group);
@@ -944,6 +1007,7 @@ payBtn.addEventListener("click", function() {
 							await addToInactiveGrp(sceance.matiere, sceance.idDossier);
 						}
 						await activateGrps();
+						window.location.reload();
 					}
 					pricePopup.classList.add("hidden");
 					thanksPopups[3].classList.remove("hidden");
@@ -1000,10 +1064,43 @@ const hideThanksPopups = function() {
 popupBtns.forEach(btn => {
 	btn.addEventListener("click", hideThanksPopups);
 });
+
 hideFormationBtn.addEventListener("click", hideThanksPopups);
 hidePricenBtn.forEach(btn => { btn.addEventListener("click", hideThanksPopups);} );
 overlay.addEventListener("click", hideThanksPopups);
 
+// Switch between Student Dashboard and teacher dashboard
+barBtns.addEventListener("click", function(e)
+{
+	e.preventDefault();
+	const clickedBtn = e.target.closest(".bar_link");
+	if (!clickedBtn)
+		return ;
+	document.querySelectorAll(".bar_link").forEach(
+		btn => btn.classList.remove("bar_link--active")
+	);
+	clickedBtn.classList.add("bar_link--active");
+	if (clickedBtn.classList.contains("bar_link--student"))
+	{
+		dashboards.forEach(dash=>dash.classList.add("hidden"));
+		mainDashboardStudent.classList.remove("hidden");
+		displayStudents("Tous");
+		reloadContent();
+	}
+	else if (clickedBtn.classList.contains("bar_link--teacher"))
+	{
+		dashboards.forEach(dash=>dash.classList.add("hidden"));f
+		mainDashboardTeacher.classList.remove("hidden");
+		reloadContent();
+	}
+	else if (clickedBtn.classList.contains("bar_link--grp"))
+	{
+		dashboards.forEach(dash=>dash.classList.add("hidden"));
+		mainDashboardGrps.classList.remove("hidden");
+		displayGroups("Tous");
+		reloadContent();
+	}
+})
 
 // Logout
 logoutBtn.addEventListener("click", function() {
