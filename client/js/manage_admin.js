@@ -300,6 +300,7 @@ const displaySubscriptions = async function(idStudent) {
 let idStudent
 const setProfileStudent = function(id)
 {
+	formationsBoxes.forEach(box=>box.innerHTML = "");
 	const activeStudent = studentsData.find(student=>student.IdEtudiant == id);
 	firstNameEtdProfile.value = activeStudent.Prenom;
 	lastNameEtdProfile.value = activeStudent.Nom;
@@ -1006,7 +1007,6 @@ payBtn.addEventListener("click", function() {
 							await addToInactiveGrp(sceance.matiere, sceance.idDossier);
 						}
 						await activateGrps();
-						window.location.reload();
 					}
 					pricePopup.classList.add("hidden");
 					thanksPopups[3].classList.remove("hidden");
@@ -1031,7 +1031,6 @@ payBtnThanks.addEventListener("click", function() {
 	displaySubscriptions(idStudent);
 	dashboards.forEach(dash => dash.classList.add("hidden"));
 	dashboardStudentProfile.classList.remove("hidden");
-	reloadContent();
 });
 
 // Filter Students
@@ -1058,6 +1057,7 @@ const hideThanksPopups = function() {
 	thanksPopups.forEach(popup => popup.classList.add("hidden"));
 	errorPopups.forEach(popup => popup.classList.add("hidden"));
 	overlay.classList.add("hidden");
+	displaySubscriptions(idStudent);
 };
 popupBtns.forEach(btn => {
 	btn.addEventListener("click", hideThanksPopups);
@@ -1083,6 +1083,7 @@ barBtns.addEventListener("click", function(e)
 		dashboards.forEach(dash=>dash.classList.add("hidden"));
 		mainDashboardStudent.classList.remove("hidden");
 		displayStudents("Tous");
+		displayGroups("Tous");
 		reloadContent();
 	}
 	else if (clickedBtn.classList.contains("bar_link--teacher"))
@@ -1093,10 +1094,11 @@ barBtns.addEventListener("click", function(e)
 	}
 	else if (clickedBtn.classList.contains("bar_link--grp"))
 	{
-		dashboards.forEach(dash=>dash.classList.add("hidden"));
-		mainDashboardGrps.classList.remove("hidden");
-		displayGroups("Tous");
-		reloadContent();
+		displayGroups("Tous").then(()=>{
+			dashboards.forEach(dash=>dash.classList.add("hidden"));
+			mainDashboardGrps.classList.remove("hidden");
+			reloadContent();
+		});
 	}
 })
 

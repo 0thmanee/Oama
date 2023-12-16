@@ -569,7 +569,6 @@ class DbService {
 					resolve(result[0]);
 				});
 			});
-			console.log(group);
 
 			let updateResult;
 			if (group) {
@@ -584,7 +583,6 @@ class DbService {
 			}
 
 			else {
-				console.log("not found group");
 				const insertId = await new Promise((resolve, reject) => {
 					const query = "INSERT INTO Groupe (Id_Matier, Statut, nbr_Etudiant) VALUES (?, ?, ?)";
 					const values = [seance.Id_Matier, 'Inactive', 1];
