@@ -622,3 +622,29 @@ textarea {
 .formation_choice:hover::after{
 	width: 100%;
 }
+.bar_search{
+	width: 20rem;
+	background-color: var(--light-bcg-color);
+	padding: 1rem 2rem;
+	border-radius: 2rem;
+	gap: 1rem;
+	gap: 1rem;
+}
+.bar_search i{
+	font-size: 1.4rem;
+	color: var(--p-color);
+}
+.bar_search input{
+	width: 100%;
+	color: var(--p-color);
+	background-color: inherit;
+	font-size: 1.6rem;
+}
+.bar_search input::placeholder{
+	color: var(--p-color);
+	transition: all var(--main-transition);
+}
+.bar_search input:focus::placeholder
+{
+	color: transparent;
+}

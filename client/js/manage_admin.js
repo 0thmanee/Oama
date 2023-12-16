@@ -21,6 +21,8 @@ const subsContainer = document.querySelector(".subscs_container");
 const deleteStudentBtn = document.querySelector(".delete_student_btn");
 const deleteStudentHide = document.querySelector(".popup_btn_del_std");
 const barBtns = document.querySelector(".bar_list");
+const searchStudent = document.querySelector(".bar_search--student");
+const searchProf = document.querySelector(".bar_search--teacher");
 const overlay = document.querySelector(".overlay");
 
 // Dashboards displaying
@@ -1096,6 +1098,36 @@ barBtns.addEventListener("click", function(e)
 		displayGroups("Tous");
 		reloadContent();
 	}
+})
+
+// Search Student
+searchStudent.addEventListener("input", function(e)
+{
+	e.preventDefault();
+	const value = e.target.value.toLowerCase();
+	const students = document.querySelectorAll(".dash_box");
+	students.forEach(student=>{
+		const name = student.querySelector(".user_name").textContent.toLowerCase();
+		if (name.includes(value))
+			student.classList.remove("hidden");
+		else
+			student.classList.add("hidden");
+	})
+})
+
+// Search Prof
+searchProf.addEventListener("input", function(e)
+{
+	e.preventDefault();
+	const value = e.target.value.toLowerCase();
+	const profs = document.querySelectorAll(".dash_box");
+	profs.forEach(prof=>{
+		const name = prof.querySelector(".user_name").textContent.toLowerCase();
+		if (name.includes(value))
+			prof.classList.remove("hidden");
+		else
+			prof.classList.add("hidden");
+	})
 })
 
 // Logout
