@@ -1,4 +1,6 @@
 // Objective: manage the professor dashboard
+const mainContent = document.querySelector("main");
+const loading = document.querySelector(".loader_content");
 const dashboardProfProfile = document.querySelector(".profile--teacher");
 const firstNameProfProfile = dashboardProfProfile.querySelector(".first_name_input");
 const lastNameProfProfile = dashboardProfProfile.querySelector(".last_name_input");
@@ -10,18 +12,20 @@ const levelProfProfile = dashboardProfProfile.querySelector(".level_input");
 const emailProfProfile = dashboardProfProfile.querySelector(".email_input");
 
 const dashContentgroup = document.querySelector(".dash_content--group");
-const dashboarddisplaygroup = document.querySelector(".main_dashboard--display-grp");
+const dashboardDisplayGroup = document.querySelector(".main_dashboard--display-grp");
 const dashboards = document.querySelectorAll(".dashboard_container");
 const profilBtn = document.querySelector(".bar_link--profil");
 const btnAbsenceActuel = document.querySelector(".abs_reminder");
-const btnAbsence = document.querySelector(".grp_btn_abs");
 const dashAbsenceList = document.querySelector(".abscence_list");
 const mainDashboardAbs = document.querySelector(".main_dashboard--abs");
 const listeAbs = document.querySelector(".abs_list");
 const submitAbsenceBtn = document.querySelector(".submit_btn_abs");
 const dashheaderabs = document.querySelector(".dash_header_abs");
-const studentsList = dashboarddisplaygroup.querySelector(".box_list_students");
+const studentsList = dashboardDisplayGroup.querySelector(".box_list_students");
+const absPopup = document.querySelector(".thanks_popup--abs");
+const popupCloseBtn = document.querySelector(".popup_btn");
 const logoutBtn = document.querySelector(".logout_btn");
+const overlay = document.querySelector(".overlay");
 
 let allgroups_Data = [];
 let professeur_Data = [];
@@ -34,13 +38,33 @@ if (!idProf)
 
 const dateActuelle = new Date();
 
+const wait = function (seconds) {
+	return new Promise(function (resolve) {
+	  setTimeout(resolve, seconds * 1000);
+	});
+  };
+
+const loadingContent = function () {
+    wait(1).then(() => {
+        loading.classList.add("hidden");
+        mainContent.classList.remove("hidden");
+	});
+};
+
+const reloadContent = function()
+{
+    loading.classList.remove("hidden");
+	mainContent.classList.add("hidden");
+	loadingContent();
+}
+
 //get groups by idprof
 fetch(`http://localhost:5000/getGroup/${localStorage.getItem('idProf')}`)
   .then(response => response.json())
   .then(group => {
     allgroups_Data = [...group.data];
   })
-    .then(() => {
+.then(() => {
 	dashContentgroup.innerHTML = "";
     allgroups_Data.forEach(group=>{
         if (group.Statut === "Active") {
@@ -74,6 +98,7 @@ fetch(`http://localhost:5000/getGroup/${localStorage.getItem('idProf')}`)
 .then(() => {
     btnAbsenceActuel.innerHTML = "";
     allgroups_Data.forEach(group=>{
+        console.log(group);
         if (verifierAbsence(group)) {
             const htmlEl = `
                 <a href="./" class="flex"
@@ -81,6 +106,7 @@ fetch(`http://localhost:5000/getGroup/${localStorage.getItem('idProf')}`)
                 </span></a>
             `;
         btnAbsenceActuel.insertAdjacentHTML("beforeend", htmlEl);
+        //document.querySelector(".grp_btn_abs").classList.remove("hidden");
         }
     })
 })
@@ -89,16 +115,16 @@ fetch(`http://localhost:5000/getGroup/${localStorage.getItem('idProf')}`)
 dashContentgroup.addEventListener("click", function(e)
 {
     e.preventDefault();
+    reloadContent();
     const list_students = [];
     const clickedBtn = e.target.closest(".grp_btn");
     if (!clickedBtn)
         return ;
     
     dashboards.forEach(dash=>dash.classList.add("hidden"));
-    dashboarddisplaygroup.classList.remove("hidden");
+    dashboardDisplayGroup.classList.remove("hidden");
     const grpClicked = allgroups_Data.find(grp => grp.Id_Group == clickedBtn.closest(".grp_box").dataset.id);
     if (!grpClicked) {
-        console.error("Le groupe n'a pas été trouvé.");
         return;
     }
     fetch(`http://localhost:5000/getGroupData/${grpClicked.Id_Group}`)
@@ -111,7 +137,7 @@ dashContentgroup.addEventListener("click", function(e)
     })
     .then(() => {
          if(grpClicked.Statut === "Active"){
-        dashboarddisplaygroup.innerHTML = "";
+        dashboardDisplayGroup.innerHTML = "";
         const htmlEl = `
         <div class="disp_grp_content">
         <div data-id=${group_Data[0].Id_Group}  class="grp_box grp-${group_Data[0].TypeFormation.toLowerCase()}">
@@ -144,7 +170,7 @@ dashContentgroup.addEventListener("click", function(e)
                 <p>salle D'etude</p>
                 <p>${group_Data[0].Num_Salle}</p>
             </li>
-            <li class="box_list_item ">
+            <li class="box_list_item">
                 <p>Liste des etudiants</p>
                 <ul class="students_list box_list_students">
                     ${list_students.map(student => `<li class="box_list_item">${student}</li>`).join('')}
@@ -154,7 +180,7 @@ dashContentgroup.addEventListener("click", function(e)
             <a href="#" class="grp_btn grp_btn_abs">Faire l'abscences</a>
         </div>
         </div>`; 
-    dashboarddisplaygroup.insertAdjacentHTML("beforeend", htmlEl); 
+    dashboardDisplayGroup.insertAdjacentHTML("beforeend", htmlEl);
         }
 })
 })
@@ -181,7 +207,6 @@ profilBtn.addEventListener("click", function(e)
     })
 })
 
-
 // check if the date of seance is actual date
 function verifierAbsence(group) {
     var date = new Date();
@@ -195,17 +220,16 @@ function verifierAbsence(group) {
     return false;
 }
 
-
-dashboarddisplaygroup.addEventListener("click", function(e) {
+dashboardDisplayGroup.addEventListener("click", function(e) {
     e.preventDefault();
     const clickedBtn = e.target.closest(".grp_btn_abs");
     if (!clickedBtn)
         return ;
-    dashboarddisplaygroup.classList.add("hidden");
+    reloadContent();
+    dashboardDisplayGroup.classList.add("hidden");
     dashAbsenceList.classList.remove("hidden");
     const grpClicked = allgroups_Data.find(grp => grp.Id_Group == clickedBtn.closest(".grp_box").dataset.id);
     if (!grpClicked) {
-        console.error("Le groupe n'a pas été trouvé.");
         return;
     }
     fetch(`http://localhost:5000/getEtudiants/${grpClicked.Id_Group}`)
@@ -227,11 +251,10 @@ dashboarddisplaygroup.addEventListener("click", function(e) {
     })
     .then(() => {
         dashheaderabs.innerHTML = "";
-        dashheaderabs.insertAdjacentHTML("beforeend", 
+        dashheaderabs.insertAdjacentHTML("beforeend",
         `<h3>Liste d'abscence</h3>
         <span>Le ${String(dateActuelle.getDate()).padStart(2, '0')+'/'+String(dateActuelle.getMonth() + 1).padStart(2, '0')+'/'+dateActuelle.getFullYear()} de ${dateActuelle.getHours() === 17 || dateActuelle.getHours() === 18 ? '17:00' : '19:00'} jusqu'a ${dateActuelle.getHours() === 17 || dateActuelle.getHours() === 18 ? '19:00' : '21:00'}</span>`);
-    })
-        
+    }) 
 })
 
 const checkAbsence = function(numDossier,idgroup) {
@@ -260,10 +283,16 @@ submitAbsenceBtn.addEventListener("click", function(e) {
         }
         checkGroupEtat(group_Data[0].Id_Group);
     })
+    absPopup.classList.remove("hidden");
+    overlay.classList.remove("hidden");
 });
-
+popupCloseBtn.addEventListener("click", function(e) {
+    e.preventDefault();
+    absPopup.classList.add("hidden");
+    overlay.classList.add("hidden");
+    window.location.reload();
+})
 // Logout from dashboard
-
 logoutBtn.addEventListener("click", function(e) {
 	e.preventDefault();
     localStorage.removeItem('idProf');

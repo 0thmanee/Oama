@@ -177,8 +177,15 @@ const displayStudents = async function(formation)
 	dashContentStudents.innerHTML = "";
 	studentsData.forEach(student=>{
 		const f = findFormation(student.IdEtudiant);
+		let virtNiveau;
 		if (formation == f || formation == "Tous")
 		{
+			if (student.Niveau == "1college" || student.Niveau == "2college" || student.Niveau == "3college")
+				virtNiveau = student.Niveau.slice(0, 1) + "CLG";
+			else if (student.Niveau == "troncCommun")
+				virtNiveau = "TC";
+			else if (student.Niveau == "1bac" || student.Niveau == "2bac")
+				virtNiveau = student.Niveau.slice(0, 1) + "BAC";
 			const htmlEl = `
 			<div data-id=${student.IdEtudiant} class="dash_box formation-${f == "Multiformation" || f == "Nouveau" ? "default" : f.toLowerCase()} flex">
 				<div class="box_icon flex"><i class="fa-solid fa-user"></i></div>
@@ -187,6 +194,7 @@ const displayStudents = async function(formation)
 					<p class="user_formation">${f}</p>
 					<a href="#" class="user_btn student_profile_btn">Voir Profil</a>
 				</div>
+				<span class="student_level">${virtNiveau}</span>
 			</div>`;
 			dashContentStudents.insertAdjacentHTML("beforeend", htmlEl);
 		}
@@ -271,7 +279,6 @@ const displaySubscriptions = async function(idStudent) {
 			const response = await fetch(`http://localhost:5000/getSeancesById/${idStudent}/${formation}`);
 			const seances = await response.json();
 			const seancesData = seances.data;
-			console.log(seancesData);
 
 			let htmlContent = "";
 			if (seancesData.length > 0) {
@@ -282,7 +289,6 @@ const displaySubscriptions = async function(idStudent) {
 			}
 		});
 		await Promise.all(promises);
-		console.log(document.querySelector(".subscs_container"));
 	} catch (error) {
 		console.error("Error fetching subscriptions:", error);
 	}
@@ -585,7 +591,6 @@ dashContentGroups.addEventListener("click", function(e) {
 
 	Promise.all([getFormationByGroup(activeGrpId), fetchStudentsByGroup(activeGrpId)])
 		.then(([formationData, studentsFromGrp]) => {
-			console.log(studentsFromGrp);
 			const activeGroup = groupsData.find(group => group.Id_Group == activeGrpId);
 			const activeProf = profsData.find(prof => prof.Matricule === activeGroup.Matricule);
 			const activeMatiere = matieresData.find(matiere => matiere.id_Matier === activeGroup.Id_Matier);
@@ -655,7 +660,6 @@ const createNewGroup = function(matiereId) {
 		})
 		.then(response => response.json())
 		.then(data => {
-			console.log("Group added to the database:", data);
 			resolve(data);
 		})
 		.catch(error => {
@@ -802,7 +806,6 @@ const addSeances = async function(sceances) {
 		});
 
 		const results = await Promise.all(promises);
-		console.log("Data returned by /insertSeanceRestant:", results);
 		return { results, areNews };
 	} catch (error) {
 		console.error(error);
@@ -816,7 +819,6 @@ const checkAvailableGroups = async function(IdMatiere, idDossier) {
 		let filteredGroups = [];
 		const allGroups = await fetch(`http://localhost:5000/checkAvailableGroup/${IdMatiere}/${idDossier}`);
 		const groups = await allGroups.json();
-		console.log(groups);
 		const timeForStudent = await fetch(`http://localhost:5000/getTimeForStudent/${idDossier}`);
 		const times = await timeForStudent.json();
 		if (!groups.data) return [];
@@ -954,7 +956,6 @@ const activateGrps = async function() {
 		groups.forEach(async (group) => {
 			if (group.Statut === "Inactive" && group.nbr_Etudiant >= 4) {
 				const grpInfos = await findGrpPlace(group.Id_Group);
-				console.log("Group infos:", grpInfos);
 				const profInfos = await findProfForGroup(group.Id_Matier, grpInfos.Jour_seance, group.Num_seance);
 				const response = await fetch(`http://localhost:5000/activateGroup`, {
 					method: 'POST',
@@ -970,14 +971,12 @@ const activateGrps = async function() {
 					})
 				});
 				const data = await response.json();
-				console.log("Group activated:", data);
 			}
 		});
 	} catch (error) {
 		console.error(error);
 	}
 }
-activateGrps();
 
 // Hide Formation Popup
 const hideFormationPopup = function() {
@@ -995,11 +994,9 @@ payBtn.addEventListener("click", function() {
 	let index = 0;
 	createDossiersAndSeances(activeFormation, inputs, idStudent).then(data => {
 		const processData = async function(data, areNews) {
-			console.log("New Seance", areNews);
 			for (const sceance of data) {
 				try {
 					if (areNews[index] == 1) {
-						console.log("New Seance");
 						const grp = await checkAvailableGroups(sceance.matiere, sceance.idDossier);
 						if (grp.length) {
 							await addStudentToGroup(grp[0].Id_Group);
@@ -1046,7 +1043,6 @@ studentsDashSelect.addEventListener("change", function(e) {
 
 // Filter Groups
 grpsDashSelect.addEventListener("change", function(e) {
-	console.log(e.target.value);
 	const selected = e.target.value;
 	if (!selected)
 		return ;
@@ -1089,7 +1085,7 @@ barBtns.addEventListener("click", function(e)
 	}
 	else if (clickedBtn.classList.contains("bar_link--teacher"))
 	{
-		dashboards.forEach(dash=>dash.classList.add("hidden"));f
+		dashboards.forEach(dash=>dash.classList.add("hidden"));
 		mainDashboardTeacher.classList.remove("hidden");
 		reloadContent();
 	}
