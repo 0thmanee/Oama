@@ -10,7 +10,7 @@ let instance = null;
 dotenv.config();
 const connection = mysql.createConnection({
 	host: process.env.HOST,
-	user: 'sql8667778',
+	user: 'sql8670602',
 	password: process.env.PASSWORD,
 	database: process.env.DATABASE
 })
@@ -173,6 +173,14 @@ class DbService {
 	//Delete Student
 	async deleteStudent(studentId) {
 		try {
+			// Select the groups
+			const selectGroupsQuery = "SELECT DISTINCT Groupe.Id_Group FROM Groupe INNER JOIN Seance ON Groupe.Id_Group = Seance.Id_Group INNER JOIN Dossier ON Seance.Num_Dossier = Dossier.numDossier WHERE Dossier.IdEtudiant = ?";
+			const groupIds = await new Promise((resolve, reject) => {
+				connection.query(selectGroupsQuery, [Number(studentId)], (err, results) => {
+					if (err) reject(new Error(err.message));
+					resolve(results.map(result => result.Id_Group));
+				});
+			});
 			// Delete student from Seance table
 			await new Promise((resolve, reject) => {
 				const deleteSeanceQuery = "DELETE FROM Seance WHERE Num_Dossier IN (SELECT numDossier FROM Dossier WHERE IdEtudiant = ?)";
@@ -199,19 +207,19 @@ class DbService {
 					resolve(result);
 				});
 			});
-
-			// Decrease the number of students in the corresponding groups
-			const decreaseGroupStudentsResult = await new Promise((resolve, reject) => {
-				const decreaseGroupStudentsQuery =
-				"UPDATE Groupe SET nbr_Etudiant = nbr_Etudiant - 1 WHERE Id_Group IN (SELECT Id_Group FROM (SELECT DISTINCT Groupe.Id_Group FROM Groupe INNER JOIN Seance ON Groupe.Id_Group = Seance.Id_Group INNER JOIN Dossier ON Seance.Num_Dossier = Dossier.numDossier WHERE Dossier.IdEtudiant = ? ) AS subquery)";
-				connection.query(decreaseGroupStudentsQuery, [Number(studentId)], async (err, result) => {
-					if (err) reject(new Error(err.message));
-					resolve(result);
+			// Update the number of students in the corresponding groups
+			if (groupIds.length > 0) {
+				const updateGroupStudentsQuery = "UPDATE Groupe SET nbr_Etudiant = nbr_Etudiant - 1 WHERE Id_Group IN (?)";
+				await new Promise((resolve, reject) => {
+					connection.query(updateGroupStudentsQuery, [groupIds], (err, result) => {
+						if (err) reject(new Error(err.message));
+						resolve(result);
+					});
 				});
-			});
+			}
 
 			// Check if nbr_Etudiant is 0 for any group and delete it
-			const deleteEmptyGroupsResult = await new Promise((resolve, reject) => {
+			await new Promise((resolve, reject) => {
 				const deleteEmptyGroupsQuery = "DELETE FROM Groupe WHERE Id_Group IN (SELECT * FROM (SELECT Id_Group FROM Groupe WHERE nbr_Etudiant = 0) AS subquery)";
 				connection.query(deleteEmptyGroupsQuery, (err, result) => {
 					if (err) reject(new Error(err.message));
@@ -721,11 +729,11 @@ class DbService {
 				const query = `
 					SELECT Professeur.Matricule
 					FROM Professeur
-					WHERE Professeur.Matier = ? 
+					WHERE Professeur.Matiere = ? 
 					AND Professeur.Matricule NOT IN (
 						SELECT DISTINCT Groupe.Matricule
 						FROM Groupe, Professeur
-						WHERE Professeur.Matier = ?
+						WHERE Professeur.Matiere = ?
 						AND Groupe.Jour_seance = ?
 						AND Groupe.Num_seance = ?
 					)

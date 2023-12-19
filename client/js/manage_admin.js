@@ -211,7 +211,7 @@ const getFormations = fetch('http://localhost:5000/getFormations')
 	.then(response => response.json())
 	.then(formations => {
 		return formations.data;
-	})
+})
 
 // Get Groups
 const getGroups = fetch('http://localhost:5000/getGroups')
@@ -220,20 +220,34 @@ const getGroups = fetch('http://localhost:5000/getGroups')
 	return groups.data;
 })
 
+// Finf Prof for Group
+const findProfForGroup = function(idMatiere, Jour, Num_seance) {
+	console.log(idMatiere, Jour, Num_seance);
+	return new Promise((resolve, reject) => {
+		fetch(`http://localhost:5000/getProfForGroup/${idMatiere}/${Jour}/${Num_seance}`)
+			.then(response => response.json())
+			.then(prof => {
+				resolve(prof.data);
+			})
+			.catch(error => {
+				reject(error);
+			});
+	});
+}
+
 // Check Activated Groups
 const activateGrps = async function () {
 	try {
 	  const groups = await getGroups;
 	  for (const group of groups) {
 		if (group.Statut === "Inactive" && group.nbr_Etudiant >= 4) {
-			console.log(group);
 		  const grpInfos = await findGrpPlace(group.Id_Group);
-  
 		  const profInfos = await findProfForGroup(
 			group.Id_Matier,
 			grpInfos.Jour_seance,
-			group.Num_seance
+			grpInfos.Num_seance
 		  );
+		  console.log(profInfos);
   
 		  const response = await fetch(`http://localhost:5000/activateGroup`, {
 			method: "POST",
@@ -306,6 +320,8 @@ const displayGroups = async function(formation) {
 		console.error(error);
 	}
 }
+
+// Activate Groups
 const activateAndReload = async function () {
 	try {
 	  await activateGrps();
@@ -377,13 +393,13 @@ deleteStudentBtn.addEventListener("click", function(e){
 deleteStudentConfirm.addEventListener("click", function(e){
 	e.preventDefault();
 	deleteStudentConfirm.value = "En Cours...";
-	deleteStudentVerify.classList.add("hidden");
 	const fetchToRemoveStudent = fetch(`http://localhost:5000/deleteStudent/${idStudent}`, {
 		method: 'DELETE'
 	})
 	.then(response => response.json());
 	fetchToRemoveStudent.then(()=>{
 		displayStudents("Tous");
+		deleteStudentVerify.classList.add("hidden");
 		deleteStudentPopup.classList.remove("hidden");
 		deleteStudentConfirm.value = "Supprimer";
 	})
@@ -910,8 +926,10 @@ const checkAvailableGroups = async function(IdMatiere, idDossier) {
 		let filteredGroups = [];
 		const allGroups = await fetch(`http://localhost:5000/checkAvailableGroup/${IdMatiere}/${idDossier}`);
 		const groups = await allGroups.json();
+		console.log(groups.data);
 		const timeForStudent = await fetch(`http://localhost:5000/getTimeForStudent/${idDossier}`);
 		const times = await timeForStudent.json();
+		console.log(times);
 		if (!groups.data) return [];
 		filteredGroups = groups.data.filter(group => {
 			return !times.data.some(time => {
@@ -1026,20 +1044,6 @@ const findGrpPlace = function(idGroup) {
 	});
 }
 
-// Finf Prof for Group
-const findProfForGroup = function(idMatiere, Jour, Num_seance) {
-	return new Promise((resolve, reject) => {
-		fetch(`http://localhost:5000/getProfForGroup/${idMatiere}/${Jour}/${Num_seance}`)
-			.then(response => response.json())
-			.then(prof => {
-				resolve(prof.data);
-			})
-			.catch(error => {
-				reject(error);
-			});
-	});
-}
-
 // Hide Formation Popup
 const hideFormationPopup = function() {
 	addFormationPopup.classList.add("hidden");
@@ -1063,9 +1067,11 @@ payBtn.addEventListener("click", function () {
 				sceance.matiere,
 				sceance.idDossier
 			  );
-			  if (grp.length) {
+			  if (grp.length > 0) {
+				console.log("Active Grp Found: ", grp[0].Id_Group);
 				await addStudentToGroup(grp[0].Id_Group);
 			  } else {
+				console.log("Inactive Grp Found");
 				await addToInactiveGrp(sceance.matiere, sceance.idDossier);
 			  }
 			  window.location.reload();

@@ -162,8 +162,7 @@ app.get('/checkAvailableGroup/:idMatier/:idDossier', (request, response) => {
 	const idDossier = request.params.idDossier;
 	const result = db.checkAvailableGroup(idMatier, idDossier);
 	result.then(data => {
-		const { id, conditionValue } = data;
-		response.json({ success: true});
+		response.json({data: data});
 	})
 	.catch(err => {
 		response.status(500).json({ success: false, error: err.message });
