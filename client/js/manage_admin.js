@@ -20,6 +20,9 @@ const payBtnThanks = document.querySelector(".thanks_popup--update_student").que
 const subsContainer = document.querySelector(".subscs_container");
 const deleteStudentBtn = document.querySelector(".delete_student_btn");
 const deleteStudentHide = document.querySelector(".popup_btn_del_std");
+const deleteStudentVerify = document.querySelector(".show_delete_popup");
+const deleteStudentConfirm = document.querySelector(".popup_btn_del_std_confirm");
+const deleteStudentCancel = document.querySelectorAll(".popup_btn_del_std_cancel");
 const barBtns = document.querySelector(".bar_list");
 const searchStudent = document.querySelector(".bar_search--student");
 const searchProf = document.querySelector(".bar_search--teacher");
@@ -203,8 +206,125 @@ const displayStudents = async function(formation)
 	});
 }
 
-displayStudents("Tous");
+// Get Formations of all groups
+const getFormations = fetch('http://localhost:5000/getFormations')
+	.then(response => response.json())
+	.then(formations => {
+		return formations.data;
+	})
 
+// Get Groups
+const getGroups = fetch('http://localhost:5000/getGroups')
+.then(response => response.json())
+.then(groups => {
+	return groups.data;
+})
+
+// Check Activated Groups
+const activateGrps = async function () {
+	try {
+	  const groups = await getGroups;
+	  for (const group of groups) {
+		if (group.Statut === "Inactive" && group.nbr_Etudiant >= 4) {
+			console.log(group);
+		  const grpInfos = await findGrpPlace(group.Id_Group);
+  
+		  const profInfos = await findProfForGroup(
+			group.Id_Matier,
+			grpInfos.Jour_seance,
+			group.Num_seance
+		  );
+  
+		  const response = await fetch(`http://localhost:5000/activateGroup`, {
+			method: "POST",
+			headers: {
+			  "Content-type": "application/json",
+			},
+			body: JSON.stringify({
+			  Matricule: profInfos[0].Matricule,
+			  Num_Salle: grpInfos.numSalle,
+			  Jour_seance: grpInfos.Jour_seance,
+			  Num_seance: grpInfos.Num_seance,
+			  groupId: group.Id_Group,
+			}),
+		  });
+		  const data = await response.json();
+		  console.log(data);
+		}
+	  }
+	} catch (error) {
+	  console.error(error);
+	}
+};
+
+// display Groups
+const displayGroups = async function(formation) {
+	try {
+		const getGroups = fetch('http://localhost:5000/getGroups')
+		.then(response => response.json())
+		.then(groups => {
+			return groups.data;
+		})
+		const [groups, formations] = await Promise.all([getGroups, getFormations]);
+		dashContentGroups.innerHTML = "";
+		groups.forEach(group => {
+			groupsData.push(group);
+			const professor = profsData.find(prof => prof.Matricule == group.Matricule);
+			const f = formations.find(f => f.Id_Group == group.Id_Group);
+			const matiere = matieresData.find(m => m.id_Matier == group.Id_Matier);
+			if (f && matiere && (formation == f.TypeFormation || formation == "Tous")) {
+				dashContentGroups.insertAdjacentHTML("beforeend", `
+					<div data-id=${group.Id_Group} class="grp_box grp-${f.TypeFormation.toLowerCase()}">
+						<div class="grp_box_header flex">
+							<h4></h4>
+							<span>${matiere.Nom_Matier}</span>
+						</div>
+						<ul class="grp_box_list">
+							<li class="box_list_item">
+								<p>ID du Groupe</p>
+								<p>${group.Id_Group}</p>
+							</li>
+							<li class="box_list_item">
+								<p>Status</p>
+								<p>${group.Statut}</p>
+							</li>
+							<li class="box_list_item">
+								<p>Nombre d'etudiants</p>
+								<p>${group.nbr_Etudiant}</p>
+							</li>
+							<li class="box_list_item">
+								<p>Professeur</p>
+								<p>${professor ? professor.Prenom + ' ' + professor.Nom : 'N/A'}</p>
+							</li>
+						</ul>
+						<a href="#" class="grp_btn">Voir Les Details</a>
+					</div>
+				`);
+			}
+		});
+	} catch (error) {
+		console.error(error);
+	}
+}
+const activateAndReload = async function () {
+	try {
+	  await activateGrps();
+	  await displayStudents("Tous");
+	  await displayProfs();
+	  fetch('http://localhost:5000/getGroups')
+	  .then(response => response.json())
+	  .then(groups => {
+		  return groups.data;
+	  })
+	  await displayGroups("Tous");
+	  loadingContent();
+	} catch (error) {
+	  console.error("Error during activation and reload:", error);
+	}
+  };
+  
+
+activateAndReload();
 // Add Student To DB
 addStudentForm.addEventListener("submit", function(e)
 {
@@ -247,19 +367,35 @@ addStudentForm.addEventListener("submit", function(e)
 	})
 })
 
-//remove student from DB
-// deleteStudentBtn.addEventListener("click", function(e){
-// 	e.preventDefault();
-// 	const fetchToRemoveStudent = fetch(`http://localhost:5000/deleteStudent/${idStudent}`, {
-// 		method: 'DELETE'
-// 	})
-// 	.then(response => response.json());
-// 	fetchToRemoveStudent.then(()=>{
-// 		displayStudents("Tous");
-// 		deleteStudentPopup.classList.remove("hidden");
-// 		overlay.classList.remove("hidden");
-// 	})
-// })
+// remove student from DB
+deleteStudentBtn.addEventListener("click", function(e){
+	e.preventDefault();
+	deleteStudentVerify.classList.remove("hidden");
+	overlay.classList.remove("hidden");
+})
+
+deleteStudentConfirm.addEventListener("click", function(e){
+	e.preventDefault();
+	deleteStudentConfirm.value = "En Cours...";
+	deleteStudentVerify.classList.add("hidden");
+	const fetchToRemoveStudent = fetch(`http://localhost:5000/deleteStudent/${idStudent}`, {
+		method: 'DELETE'
+	})
+	.then(response => response.json());
+	fetchToRemoveStudent.then(()=>{
+		displayStudents("Tous");
+		deleteStudentPopup.classList.remove("hidden");
+		deleteStudentConfirm.value = "Supprimer";
+	})
+})
+
+deleteStudentCancel.forEach(btn=>{
+	btn.addEventListener("click", function(e){
+		e.preventDefault();
+		deleteStudentVerify.classList.add("hidden");
+		overlay.classList.add("hidden");
+	})
+})
 
 deleteStudentHide.addEventListener("click", function(e){
 	e.preventDefault();
@@ -358,26 +494,38 @@ saveInfoStudent.addEventListener("click", function(e)
 })
 
 // Display Professors on the dashboard
-const displayProfs = function()
-{
-const fetchProfs = fetch('http://localhost:5000/getProfesseurs')
-  .then(response => response.json())
-  .then(profs => {
-    profsData = [...profs.data];
+const displayProfs = function() {
+	return new Promise((resolve, reject) => {
+		const fetchProfs = fetch('http://localhost:5000/getProfesseurs')
+			.then(response => response.json())
+			.then(profs => {
+				profsData = [...profs.data];
+				resolve(profsData);
+			})
+			.catch(error => {
+				reject(error);
+			});
+	});
+};
 
-  }).then(()=>{
-	  dashContentProfs.innerHTML = "";
-	  profsData.forEach(prof=>{
-		dashContentProfs.insertAdjacentHTML("beforeend", `
-		<div data-id=${prof.Matricule} class="dash_box formation-default flex">
-			<div class="box_icon flex"><i class="fa-solid fa-user-tie"></i></div>
-			<div class="box_info">
-			<p class="user_name">${prof.Prenom} ${prof.Nom}</p>
-			<a href="#" class="user_btn teacher_profile_btn">Voir Profil</a>
-			</div>
-		</div>`)
-  });})
-}
+displayProfs()
+	.then(profsData => {
+		dashContentProfs.innerHTML = "";
+		profsData.forEach(prof => {
+			dashContentProfs.insertAdjacentHTML("beforeend", `
+				<div data-id=${prof.Matricule} class="dash_box formation-default flex">
+					<div class="box_icon flex"><i class="fa-solid fa-user-tie"></i></div>
+					<div class="box_info">
+						<p class="user_name">${prof.Prenom} ${prof.Nom}</p>
+						<a href="#" class="user_btn teacher_profile_btn">Voir Profil</a>
+					</div>
+				</div>
+			`);
+		});
+	})
+	.catch(error => {
+		console.error(error);
+	});
 displayProfs();
 
 // get Matieres from DB
@@ -495,66 +643,6 @@ saveInfoProf.addEventListener("click", function(e)
 		overlay.classList.remove("hidden");
 	})
 })
-
-// Get Formations of all groups
-const getFormations = fetch('http://localhost:5000/getFormations')
-	.then(response => response.json())
-	.then(formations => {
-		return formations.data;
-	})
-
-// Get Groups
-const getGroups = fetch('http://localhost:5000/getGroups')
-.then(response => response.json())
-.then(groups => {
-	return groups.data;
-})
-
-// display Groups
-const displayGroups = async function(formation) {
-	try {
-		const [groups, formations] = await Promise.all([getGroups, getFormations]);
-		dashContentGroups.innerHTML = "";
-		groups.forEach(group => {
-			groupsData.push(group);
-			const professor = profsData.find(prof => prof.Matricule == group.Matricule);
-			const f = formations.find(f => f.Id_Group == group.Id_Group);
-			const matiere = matieresData.find(m => m.id_Matier == group.Id_Matier);
-			if (f && matiere && (formation == f.TypeFormation || formation == "Tous")) {
-				dashContentGroups.insertAdjacentHTML("beforeend", `
-					<div data-id=${group.Id_Group} class="grp_box grp-${f.TypeFormation.toLowerCase()}">
-						<div class="grp_box_header flex">
-							<h4></h4>
-							<span>${matiere.Nom_Matier}</span>
-						</div>
-						<ul class="grp_box_list">
-							<li class="box_list_item">
-								<p>ID du Groupe</p>
-								<p>${group.Id_Group}</p>
-							</li>
-							<li class="box_list_item">
-								<p>Status</p>
-								<p>${group.Statut}</p>
-							</li>
-							<li class="box_list_item">
-								<p>Nombre d'etudiants</p>
-								<p>${group.nbr_Etudiant}</p>
-							</li>
-							<li class="box_list_item">
-								<p>Professeur</p>
-								<p>${professor ? professor.Prenom + ' ' + professor.Nom : 'N/A'}</p>
-							</li>
-						</ul>
-						<a href="#" class="grp_btn">Voir Les Details</a>
-					</div>
-				`);
-			}
-		});
-	} catch (error) {
-		console.error(error);
-	}
-}
-displayGroups("Tous");
 
 // Get Formation by Group
 const getFormationByGroup = function(groupId) {
@@ -952,85 +1040,55 @@ const findProfForGroup = function(idMatiere, Jour, Num_seance) {
 	});
 }
 
-// Check Activated Groups
-const activateGrps = async function() {
-	try {
-		const groups = await getGroups;
-		groups.forEach(async (group) => {
-			if (group.Statut === "Inactive" && group.nbr_Etudiant >= 4) {
-				const grpInfos = await findGrpPlace(group.Id_Group);
-				const profInfos = await findProfForGroup(group.Id_Matier, grpInfos.Jour_seance, group.Num_seance);
-				const response = await fetch(`http://localhost:5000/activateGroup`, {
-					method: 'POST',
-					headers: {
-						'Content-type': 'application/json'
-					},
-					body: JSON.stringify({
-						Matricule: profInfos[0].Matricule,
-						Num_Salle: grpInfos.numSalle,
-						Jour_seance: grpInfos.Jour_seance,
-						Num_seance: grpInfos.Num_seance,
-						groupId: group.Id_Group
-					})
-				});
-				const data = await response.json();
-			}
-		});
-	} catch (error) {
-		console.error(error);
-	}
-}
-
 // Hide Formation Popup
 const hideFormationPopup = function() {
 	addFormationPopup.classList.add("hidden");
 	pricePopup.classList.add("hidden");
 	overlay.classList.add("hidden");
-	activateGrps();
 };
 // Pay Formation
 let isDone = 0;
-payBtn.addEventListener("click", function() {
+payBtn.addEventListener("click", function () {
 	if (isDone) return;
 	payBtn.textContent = ".....";
 	isDone = 1;
 	let index = 0;
-	createDossiersAndSeances(activeFormation, inputs, idStudent).then(data => {
-		const processData = async function(data, areNews) {
-			for (const sceance of data) {
-				try {
-					if (areNews[index] == 1) {
-						const grp = await checkAvailableGroups(sceance.matiere, sceance.idDossier);
-						if (grp.length) {
-							await addStudentToGroup(grp[0].Id_Group);
-						} else {
-							await addToInactiveGrp(sceance.matiere, sceance.idDossier);
-						}
-						await activateGrps();
-					}
-					pricePopup.classList.add("hidden");
-					thanksPopups[3].classList.remove("hidden");
-					overlay.classList.remove("hidden");
-					isDone = 0;
-					payBtn.textContent = "Payé";
-				} catch (error) {
-					console.error(error);
-				}
-				index++;
+  
+	createDossiersAndSeances(activeFormation, inputs, idStudent).then((data) => {
+	  const processData = async function (data, areNews) {
+		for (const sceance of data) {
+		  try {
+			if (areNews[index] == 1) {
+			  const grp = await checkAvailableGroups(
+				sceance.matiere,
+				sceance.idDossier
+			  );
+			  if (grp.length) {
+				await addStudentToGroup(grp[0].Id_Group);
+			  } else {
+				await addToInactiveGrp(sceance.matiere, sceance.idDossier);
+			  }
+			  window.location.reload();
 			}
-		};
-
-		addSeances(data)
-			.then(({ results, areNews }) => {processData(data, areNews)})
-			.catch(error => {
-				console.error(error);
-			});
-	})
-});
+		  } catch (error) {
+			console.error(error);
+		  }
+		  index++;
+		}
+	  };
+  
+	  addSeances(data)
+		.then(({ results, areNews }) => {
+		  return processData(data, areNews);
+		})
+		.catch((error) => {
+		  console.error(error);
+		});
+	});
+  });
+  
 payBtnThanks.addEventListener("click", function() {
 	displaySubscriptions(idStudent);
-	dashboards.forEach(dash => dash.classList.add("hidden"));
-	dashboardStudentProfile.classList.remove("hidden");
 });
 
 // Filter Students
@@ -1056,8 +1114,10 @@ hidePayBtn.addEventListener("click", hideFormationPopup);
 const hideThanksPopups = function() {
 	thanksPopups.forEach(popup => popup.classList.add("hidden"));
 	errorPopups.forEach(popup => popup.classList.add("hidden"));
+	deleteStudentPopup.classList.add("hidden");
 	overlay.classList.add("hidden");
 	displaySubscriptions(idStudent);
+	activateAndReload();
 };
 popupBtns.forEach(btn => {
 	btn.addEventListener("click", hideThanksPopups);
@@ -1067,10 +1127,15 @@ hideFormationBtn.addEventListener("click", hideThanksPopups);
 hidePricenBtn.forEach(btn => { btn.addEventListener("click", hideThanksPopups);} );
 overlay.addEventListener("click", hideThanksPopups);
 
-// Switch between Student Dashboard and teacher dashboard
+//Switch between Student Dashboard and teacher dashboard
 barBtns.addEventListener("click", function(e)
 {
 	e.preventDefault();
+	searchStudent.value = searchProf.value = "";
+	const students = document.querySelectorAll(".dash_box");
+	const profs = document.querySelectorAll(".dash_box");
+	students.forEach(student=>student.classList.remove("hidden"));
+	profs.forEach(prof=>prof.classList.remove("hidden"));
 	const clickedBtn = e.target.closest(".bar_link");
 	if (!clickedBtn)
 		return ;

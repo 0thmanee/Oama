@@ -170,69 +170,69 @@ class DbService {
 		}
 	}
 
-	// Delete Student
-	// async deleteStudent(studentId) {
-	// 	try {
-	// 		// Delete student from Seance table
-	// 		await new Promise((resolve, reject) => {
-	// 			const deleteSeanceQuery = "DELETE FROM Seance WHERE Num_Dossier IN (SELECT numDossier FROM Dossier WHERE IdEtudiant = ?)";
-	// 			connection.query(deleteSeanceQuery, [studentId], (err, result) => {
-	// 				if (err) reject(new Error(err.message));
-	// 				resolve(result);
-	// 			});
-	// 		});
+	//Delete Student
+	async deleteStudent(studentId) {
+		try {
+			// Delete student from Seance table
+			await new Promise((resolve, reject) => {
+				const deleteSeanceQuery = "DELETE FROM Seance WHERE Num_Dossier IN (SELECT numDossier FROM Dossier WHERE IdEtudiant = ?)";
+				connection.query(deleteSeanceQuery, [studentId], (err, result) => {
+					if (err) reject(new Error(err.message));
+					resolve(result);
+				});
+			});
 
-	// 		// Delete student from Seance_restant table
-	// 		await new Promise((resolve, reject) => {
-	// 			const deleteSeancesRestantQuery = "DELETE FROM Seance_restant WHERE numDossier IN (SELECT numDossier FROM Dossier WHERE IdEtudiant = ?)";
-	// 			connection.query(deleteSeancesRestantQuery, [studentId], (err, result) => {
-	// 				if (err) reject(new Error(err.message));
-	// 				resolve(result);
-	// 			});
-	// 		});
+			// Delete student from Seance_restant table
+			await new Promise((resolve, reject) => {
+				const deleteSeancesRestantQuery = "DELETE FROM Seance_restant WHERE numDossier IN (SELECT numDossier FROM Dossier WHERE IdEtudiant = ?)";
+				connection.query(deleteSeancesRestantQuery, [studentId], (err, result) => {
+					if (err) reject(new Error(err.message));
+					resolve(result);
+				});
+			});
 
-	// 		// Delete student from Dossier table
-	// 		await new Promise((resolve, reject) => {
-	// 			const deleteDossiersQuery = "DELETE FROM Dossier WHERE IdEtudiant = ?";
-	// 			connection.query(deleteDossiersQuery, [studentId], (err, result) => {
-	// 				if (err) reject(new Error(err.message));
-	// 				resolve(result);
-	// 			});
-	// 		});
+			// Delete student from Dossier table
+			await new Promise((resolve, reject) => {
+				const deleteDossiersQuery = "DELETE FROM Dossier WHERE IdEtudiant = ?";
+				connection.query(deleteDossiersQuery, [studentId], (err, result) => {
+					if (err) reject(new Error(err.message));
+					resolve(result);
+				});
+			});
 
-	// 		// Decrease the number of students in the corresponding groups
-	// 		const decreaseGroupStudentsResult = await new Promise((resolve, reject) => {
-	// 			const decreaseGroupStudentsQuery =
-	// 				"UPDATE Groupe SET nbr_Etudiant = nbr_Etudiant - 1 WHERE Id_Group IN (SELECT Id_Group FROM (SELECT DISTINCT Groupe.Id_Group FROM Groupe, Seance, Dossier WHERE Groupe.Id_Group = Seance.Id_Group AND Seance.Num_Dossier = Dossier.numDossier AND Dossier.IdEtudiant = ?) AS subquery)";
-	// 			connection.query(decreaseGroupStudentsQuery, [Number(studentId)], async (err, result) => {
-	// 				if (err) reject(new Error(err.message));
-	// 				resolve(result);
-	// 			});
-	// 		});
+			// Decrease the number of students in the corresponding groups
+			const decreaseGroupStudentsResult = await new Promise((resolve, reject) => {
+				const decreaseGroupStudentsQuery =
+				"UPDATE Groupe SET nbr_Etudiant = nbr_Etudiant - 1 WHERE Id_Group IN (SELECT Id_Group FROM (SELECT DISTINCT Groupe.Id_Group FROM Groupe INNER JOIN Seance ON Groupe.Id_Group = Seance.Id_Group INNER JOIN Dossier ON Seance.Num_Dossier = Dossier.numDossier WHERE Dossier.IdEtudiant = ? ) AS subquery)";
+				connection.query(decreaseGroupStudentsQuery, [Number(studentId)], async (err, result) => {
+					if (err) reject(new Error(err.message));
+					resolve(result);
+				});
+			});
 
-	// 		// Check if nbr_Etudiant is 0 for any group and delete it
-	// 		const deleteEmptyGroupsResult = await new Promise((resolve, reject) => {
-	// 			const deleteEmptyGroupsQuery = "DELETE FROM Groupe WHERE Id_Group IN (SELECT Id_Group FROM Groupe WHERE nbr_Etudiant = 0)";
-	// 			connection.query(deleteEmptyGroupsQuery, (err, result) => {
-	// 				if (err) reject(new Error(err.message));
-	// 				resolve(result);
-	// 			});
-	// 		});
+			// Check if nbr_Etudiant is 0 for any group and delete it
+			const deleteEmptyGroupsResult = await new Promise((resolve, reject) => {
+				const deleteEmptyGroupsQuery = "DELETE FROM Groupe WHERE Id_Group IN (SELECT * FROM (SELECT Id_Group FROM Groupe WHERE nbr_Etudiant = 0) AS subquery)";
+				connection.query(deleteEmptyGroupsQuery, (err, result) => {
+					if (err) reject(new Error(err.message));
+					resolve(result);
+				});
+			});
 
-	// 		// Delete student from Etudiant table
-	// 		const deleteStudentResult = await new Promise((resolve, reject) => {
-	// 			const deleteStudentQuery = "DELETE FROM Etudiant WHERE IdEtudiant = ?";
-	// 			connection.query(deleteStudentQuery, [studentId], (err, result) => {
-	// 				if (err) reject(new Error(err.message));
-	// 				resolve(result);
-	// 			});
-	// 		});
+			// Delete student from Etudiant table
+			const deleteStudentResult = await new Promise((resolve, reject) => {
+				const deleteStudentQuery = "DELETE FROM Etudiant WHERE IdEtudiant = ?";
+				connection.query(deleteStudentQuery, [studentId], (err, result) => {
+					if (err) reject(new Error(err.message));
+					resolve(result);
+				});
+			});
 
-	// 		return deleteStudentResult;
-	// 	} catch (error) {
-	// 		console.log(error);
-	// 	}
-	// }
+			return deleteStudentResult;
+		} catch (error) {
+			console.log(error);
+		}
+	}
 
 	// Get Professeurs
 	async getProfesseursData() {

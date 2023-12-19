@@ -51,11 +51,11 @@ const loadingContent = function () {
 	});
 };
 const mediaQuery = window.matchMedia('(max-width: 1024px)');
-window.addEventListener("load", loadingContent);
-if (mediaQuery.matches)
-{
-	window.location.href = "./404.html";
-}
+// window.addEventListener("load", loadingContent);
+// if (mediaQuery.matches)
+// {
+// 	window.location.href = "./404.html";
+// }
 
 const reloadContent = function()
 {

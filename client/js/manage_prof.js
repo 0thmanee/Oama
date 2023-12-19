@@ -76,8 +76,8 @@ fetch(`http://localhost:5000/getGroup/${localStorage.getItem('idProf')}`)
         </div>
         <ul class="grp_box_list">
           <li class="box_list_item">
-            <p>ID du Groupe</p>
-            <p>${group.Id_Group}</p>
+            <p>Temps De Sceance</p>
+            <p>${group.Jour_seance} A ${group.Num_seance == 1 ? '17:00' : '19:00'}</p>
           </li>
           <li class="box_list_item">
             <p>Status</p>
@@ -115,12 +115,11 @@ fetch(`http://localhost:5000/getGroup/${localStorage.getItem('idProf')}`)
 dashContentgroup.addEventListener("click", function(e)
 {
     e.preventDefault();
-    reloadContent();
-    const list_students = [];
     const clickedBtn = e.target.closest(".grp_btn");
     if (!clickedBtn)
         return ;
-    
+    reloadContent();
+    const list_students = [];
     dashboards.forEach(dash=>dash.classList.add("hidden"));
     dashboardDisplayGroup.classList.remove("hidden");
     const grpClicked = allgroups_Data.find(grp => grp.Id_Group == clickedBtn.closest(".grp_box").dataset.id);

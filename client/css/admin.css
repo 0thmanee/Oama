@@ -307,7 +307,7 @@ textarea {
 .input_with_pen i:hover{
 	color: #000;
 }
-.add_formation, .show_price_popup{
+.add_formation, .show_price_popup, .show_delete_popup{
 	min-width: 40%;
 	padding: 2rem 0;
 	border-radius: 1rem;
@@ -422,7 +422,8 @@ textarea {
 	border: solid .1rem var(--primary-color);
 	justify-content: center;
 }
-.pay_btn--prim{
+.pay_btn--prim,
+.popup_btn_del_std_confirm{
 	color: #fff;
 	background-color: var(--primary-color);
 }

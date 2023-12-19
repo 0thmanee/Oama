@@ -59,8 +59,8 @@
               <span>Tous les membres de OAMA formation</span>
             </div>
             <div class="dash_btns flex">
-              <div class="bar_search bar_search--student flex">
-                <input id="search" type="text" placeholder="Nom de l'étudiant">
+              <div class="bar_search flex">
+                <input class="bar_search--student" id="search" type="text" placeholder="Nom de l'étudiant">
                 <div for="search"><i class="fa-solid fa-magnifying-glass"></i></div>
               </div>
               <div class="select_container flex">
@@ -229,8 +229,8 @@
               <span>Tous les Profs de OAMA formation</span>
             </div>
             <div class="dash_btns flex">
-              <div class="bar_search bar_search--teacher flex">
-                <input id="search" type="text" placeholder="Nom du Professeur">
+              <div class="bar_search flex">
+                <input class="bar_search--teacher" id="search" type="text" placeholder="Nom du Professeur">
                 <div for="search"><i class="fa-solid fa-magnifying-glass"></i></div>
               </div>
               <button class="dash_btn add_btn add_btn--teacher flex"><span>Ajouter</span><i class="fa-solid fa-user-plus"></i></button>
@@ -386,8 +386,7 @@
                   <li data-formation="Developement" class="formation_choice formation_choice--developement">Developement</li>
                 </ul>
               </div>
-              <!-- <button class="dash_btn add_btn delete_student_btn flex"><span>Supprimer</span><i class="fa-solid fa-user-minus"></i></button> -->
-
+              <button class="dash_btn add_btn delete_student_btn flex"><span>Supprimer</span><i class="fa-solid fa-user-minus"></i></button>
             </div>
           </div>
           <form class="add_user_form">
@@ -814,6 +813,19 @@
         <div class="price_btns flex">
           <a href="#" class="pay_btn flex pay_btn--prim">Payé</a>
           <a href="#" class="pay_btn flex pay_btn--sec hide_popup_btn-2">Annulé</a>
+        </div>
+      </div>
+      <div class="show_delete_popup hidden">
+        <div class="popup_header flex">
+          <h3>Supprimer Un Etudiant</h3>
+          <i class="popup_btn_del_std_cancel fa-solid fa-xmark"></i>
+        </div>
+        <div class="price_display flex">
+          <span>Êtes-vous sûr de vouloir supprimer l'étudiant ?</span>
+        </div>
+        <div class="price_btns flex">
+          <a href="#" class="pay_btn flex popup_btn_del_std_confirm">Supprimer</a>
+          <a href="#" class="pay_btn flex pay_btn--sec popup_btn_del_std_cancel">Annuler</a>
         </div>
       </div>
       <div class="thanks_popup thanks_popup--student flex hidden">
