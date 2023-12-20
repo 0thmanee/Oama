@@ -525,27 +525,10 @@ class DbService {
 					resolve(result);
 				});
 			});
-			
-			const group = await new Promise((resolve, reject) => {
-				const query = "SELECT nbr_Etudiant FROM Groupe WHERE Id_Group = ?";
-				connection.query(query, [seance.Id_Group], (err, result) => {
-					if (err) reject(err);
-					resolve(result[0]);
-				});
-			});
-
-			// if (group.nbr_Etudiant >= 4) {
-			// 	await new Promise((resolve, reject) => {
-			// 		const query = "UPDATE Groupe SET Statut = 'Active' WHERE Id_Group = ?";
-			// 		connection.query(query, [seance.Id_Group], (err, result) => {
-			// 			if (err) reject(err);
-			// 			resolve(result);
-			// 		});
-			// 	});
-			// }
-			const insertResult = await new Promise((resolve, reject) => {
+			await new Promise((resolve, reject) => {
+				console.log(seance);
 				const query = "INSERT INTO Seance (Id_Group, Num_Dossier, Nbr_Abscence) VALUES (?, ?, ?)";
-				const values = [seance.Id_Group, seance.Num_Dossier, 0];
+				const values = [seance.Id_Group, seance.Id_Dossier, 0];
 				connection.query(query, values, (err, result) => {
 					if (err) reject(err);
 					resolve(result);
@@ -741,7 +724,7 @@ class DbService {
 						SELECT COUNT(*)
 						FROM Groupe
 						WHERE Groupe.Matricule = Professeur.Matricule
-					) <= 3
+					) < 3
 					LIMIT 1
 				`;
 				const values = [idMatiere, idMatiere, Jour, Num_Seance];

@@ -1069,7 +1069,7 @@ payBtn.addEventListener("click", function () {
 			  );
 			  if (grp.length > 0) {
 				console.log("Active Grp Found: ", grp[0].Id_Group);
-				await addStudentToGroup(grp[0].Id_Group);
+				await addStudentToGroup(grp[0].Id_Group, sceance.idDossier);
 			  } else {
 				console.log("Inactive Grp Found");
 				await addToInactiveGrp(sceance.matiere, sceance.idDossier);
