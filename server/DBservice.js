@@ -503,7 +503,7 @@ class DbService {
 	async getTimeForStudent(NumDossier) {
 		try {
 			const response = await new Promise((resolve, reject) => {
-				const query = "SELECT Groupe.Num_seance,Groupe.Jour_seance FROM Groupe,Seance,Dossier WHERE Dossier.IdEtudiant=1001 AND Dossier.numDossier=Seance.Num_Dossier AND Seance.Id_Group=Groupe.Id_Group";
+				const query = "SELECT Groupe.Num_seance,Groupe.Jour_seance FROM Groupe,Seance,Dossier WHERE Dossier.numDossier=Seance.Num_Dossier AND Seance.Id_Group=Groupe.Id_Group AND Dossier.numDossier = ?;";
 				connection.query(query, [NumDossier], (err, results) => {
 					if (err) reject(new Error(err.message));
 					resolve(results);
