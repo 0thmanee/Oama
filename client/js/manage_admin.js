@@ -51,7 +51,6 @@ const emailEtd = addStudentForm.querySelector(".email_input");
 const addStudentBtn = document.querySelector(".submit_student");
 const addStudentPopup = document.querySelector(".thanks_popup--student");
 const deleteStudentPopup = document.querySelector(".thanks_popup--delete_student");
-const addProfPopup = document.querySelector(".thanks_popup--prof");
 
 // Add Prof form
 const addProfForm = document.querySelector(".add_prof_form");
@@ -64,6 +63,7 @@ const quartierProf = addProfForm.querySelector(".quartier_input");
 const emailProf = addProfForm.querySelector(".email_input");
 const MatiereProf = addProfForm.querySelector(".matiere_input");
 const addProftBtn = document.querySelector(".submit_prof");
+const addProfPopup = document.querySelector(".thanks_popup--prof");
 const logoutBtn = document.querySelector(".logout_btn");
 
 // Student Profile
@@ -247,7 +247,6 @@ const activateGrps = async function () {
 			grpInfos.Jour_seance,
 			grpInfos.Num_seance
 		  );
-		  console.log(profInfos);
   
 		  const response = await fetch(`http://localhost:5000/activateGroup`, {
 			method: "POST",
@@ -353,7 +352,7 @@ addStudentForm.addEventListener("submit", function(e)
 	if (selectedDate < minDate || selectedDate > maxDate) {
 		errorPopups[0].classList.remove("hidden");
 		overlay.classList.remove("hidden");
-		addStudentBtn.value = "Ajouter Professeur";
+		addStudentBtn.value = "Ajouter Etudiant";
 		return;
 	}
 	const fetchToaddStudent = fetch("http://localhost:5000/insertStudent", {
@@ -542,12 +541,11 @@ displayProfs()
 	.catch(error => {
 		console.error(error);
 	});
-displayProfs();
 
 // get Matieres from DB
 const getMatieres = function()
 {
-	const fetchMatieres = fetch('http://localhost:5000/getMatieres')
+	fetch('http://localhost:5000/getMatieres')
 	.then(response => response.json())
 	.then(matieres => {
 		matieres.data.forEach(matiere=>{
@@ -576,7 +574,7 @@ addProfForm.addEventListener("submit", function(e) {
 		addProftBtn.value = "Ajouter Professeur";
 		return;
 	}
-	const fetchToAddProf = fetch("http://localhost:5000/insertProfesseur", {
+	const fetchToAddProf = fetch(`http://localhost:5000/insertProfesseur`, {
 		headers: {
 			'Content-type' : 'application/json'
 		},
@@ -595,11 +593,7 @@ addProfForm.addEventListener("submit", function(e) {
 	.then(response => response.json());
 	
 	fetchToAddProf.then(() => {
-		displayProfs();
-		addProftBtn.value = "Ajouter Professeur";
-		firstNameProf.value = lastNameProf.value = dateNaissProf.value = telProf.value = quartierProf.value = villeProf.value = MatiereProf.value = emailProf.value = "";
-		addStudentPopup.classList.remove("hidden");
-		overlay.classList.remove("hidden");
+		window.location.reload();
 	})
 })
 
@@ -614,7 +608,7 @@ const setProfileProf = function(id)
 	villeProfProfile.value = activeProf.Ville;
 	quartierProfProfile.value = activeProf.Quartier;
 	emailProfProfile.value = activeProf.Email;
-	MatiereProfProfile.value = 1;
+	MatiereProfProfile.value = activeProf.Matiere;
 }
 let idProf;
 
@@ -648,22 +642,18 @@ saveInfoProf.addEventListener("click", function(e)
 			Ville: villeProfProfile.value,
 			Quartier: quartierProfProfile.value,
 			Email: emailProfProfile.value,
-			Matiere: MatiereProfProfile.value
 		})
 	})
 	.then(response => response.json());
 	fetchUpdateProf.then(()=>{
-		displayProfs();
-		saveInfoProf.querySelector("span").value = "Sauvegarder";
-		updateStudentPopup.classList.remove("hidden");
-		overlay.classList.remove("hidden");
+		window.location.reload();
 	})
 })
 
 // Get Formation by Group
 const getFormationByGroup = function(groupId) {
 	return new Promise((resolve, reject) => {
-		fetch(`http://localhost:5000/getFormateursByGroup/${groupId}`)
+		fetch(`http://localhost:5000/getFormationByGroup/${groupId}`)
 			.then(response => response.json())
 			.then(formation => {
 				resolve(formation.data);
@@ -703,6 +693,7 @@ dashContentGroups.addEventListener("click", function(e) {
 			const activeMatiere = matieresData.find(matiere => matiere.id_Matier === activeGroup.Id_Matier);
 
 			const studentsList = studentsFromGrp.map(student => `<li class="student_item">${student.Prenom} ${student.Nom}</li>`).join('');
+			const grpNiveau = studentsFromGrp[0].Niveau;
 			dashboardDispgrp.innerHTML = "";
 			dashboardDispgrp.insertAdjacentHTML("beforeend",
 				`<div class="grp_box grp-${formationData[0]?.TypeFormation ? formationData[0]?.TypeFormation.toLowerCase() : 'default'}">
@@ -722,6 +713,10 @@ dashContentGroups.addEventListener("click", function(e) {
 						<li class="box_list_item">
 							<p>Nombre d'etudiants</p>
 							<p class="grp_nbr_etd">${activeGroup.nbr_Etudiant}</p>
+						</li>
+						<li class="box_list_item">
+							<p>Niveau</p>
+							<p class="grp_nbr_etd">${grpNiveau}</p>
 						</li>
 						<li class="box_list_item">
 							<p>Professeur</p>
@@ -1074,7 +1069,6 @@ payBtn.addEventListener("click", function () {
 				console.log("Inactive Grp Found");
 				await addToInactiveGrp(sceance.matiere, sceance.idDossier);
 			  }
-			  window.location.reload();
 			}
 		  } catch (error) {
 			console.error(error);
@@ -1085,7 +1079,9 @@ payBtn.addEventListener("click", function () {
   
 	  addSeances(data)
 		.then(({ results, areNews }) => {
-		  return processData(data, areNews);
+		  processData(data, areNews).then(() => {
+			window.location.reload();
+		})
 		})
 		.catch((error) => {
 		  console.error(error);

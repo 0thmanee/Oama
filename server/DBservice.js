@@ -281,7 +281,7 @@ class DbService {
 		try {
 			const insertId = await new Promise((resolve, reject) => {
 				const password = generatePassword(10);
-				const query = "INSERT INTO Professeur (Prenom, Nom, Date_Naissance, Telephone, Email, Ville, Quartier, Matier, Password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+				const query = "INSERT INTO Professeur (Prenom, Nom, Date_Naissance, Telephone, Email, Ville, Quartier, Matiere, Password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 				const values = [
 					Professeur.Prenom,
 					Professeur.Nom,
@@ -309,7 +309,7 @@ class DbService {
 	async updateProfesseur(professeurId, updatedProfesseur) {
 		try {
 			const updateResult = await new Promise((resolve, reject) => {
-				const query = "UPDATE Professeur SET Prenom=?, Nom=?, Date_Naissance=?, Telephone=?, Email=?, Ville=?, Quartier=?, Matier=? WHERE Matricule=?";
+				const query = "UPDATE Professeur SET Prenom=?, Nom=?, Date_Naissance=?, Telephone=?, Email=?, Ville=?, Quartier=? WHERE Matricule=?";
 				const values = [
 					updatedProfesseur.Prenom,
 					updatedProfesseur.Nom,
@@ -318,8 +318,7 @@ class DbService {
 					updatedProfesseur.Email,
 					updatedProfesseur.Ville,
 					updatedProfesseur.Quartier,
-					updatedProfesseur.Matiere,
-					professeurId
+					parseInt(professeurId)
 				];
 				connection.query(query, values, (err, result) => {
 					if (err) reject(err);
@@ -353,7 +352,7 @@ class DbService {
 	async getStudentsByGroup(groupId) {
 		try {
 			const response = await new Promise((resolve, reject) => {
-				const query = "SELECT Etudiant.IdEtudiant,Etudiant.Nom, Etudiant.Prenom,Dossier.numDossier FROM Seance JOIN Dossier ON Dossier.numDossier = Seance.Num_Dossier JOIN Etudiant ON Dossier.IdEtudiant = Etudiant.IdEtudiant WHERE Seance.Id_Group =?;";
+				const query = "SELECT Etudiant.IdEtudiant,Etudiant.Nom, Etudiant.Prenom, Etudiant.Niveau, Dossier.numDossier FROM Seance JOIN Dossier ON Dossier.numDossier = Seance.Num_Dossier JOIN Etudiant ON Dossier.IdEtudiant = Etudiant.IdEtudiant WHERE Seance.Id_Group =?;";
 				connection.query(query, [groupId], (err, results) => {
 					if (err) reject(new Error(err.message));
 					resolve(results);
@@ -369,7 +368,7 @@ class DbService {
 	async getFormationsData() {
 		try {
 			const response = await new Promise((resolve, reject) => {
-				const query = "select Dossier.TypeFormation, Groupe.Id_Group from Dossier,Matiere,Groupe,Seance_restant where Seance_restant.IdMatiere = Matiere.id_Matier and Matiere.id_Matier= Groupe.Id_Matier and Seance_restant.numDossier = Dossier.numDossier";
+				const query = "select DISTINCT Dossier.TypeFormation, Groupe.Id_Group from Dossier,Groupe,Seance where   Dossier.`numDossier`=Seance.`Num_Dossier` AND Seance.`Id_Group`=Groupe.`Id_Group`";
 				connection.query(query, (err, results) => {
 					if (err) reject(new Error(err.message));
 					resolve(results);
@@ -385,7 +384,7 @@ class DbService {
 	async getFormationByGroup(groupId) {
 		try {
 			const response = await new Promise((resolve, reject) => {
-				const query = "select Dossier.TypeFormation from Dossier,Matiere,Groupe,Seance_restant where Groupe.Id_Group= ? and Seance_restant.IdMatiere = Matiere.id_Matier and Matiere.id_Matier= Groupe.Id_Matier and Seance_restant.numDossier = Dossier.numDossier";
+				const query = "select DISTINCT Dossier.TypeFormation, Groupe.Id_Group from Dossier,Groupe,Seance where   Dossier.`numDossier`=Seance.`Num_Dossier` AND Seance.`Id_Group`=Groupe.`Id_Group` AND Groupe.Id_Group = ?";
 				connection.query(query, [groupId], (err, results) => {
 					if (err) reject(new Error(err.message));
 					resolve(results);

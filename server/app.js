@@ -119,7 +119,7 @@ app.get('/getFormations', (request, response) => {
 });
 
 // Get Formateurs by group
-app.get('/getFormateursByGroup/:idGroup', (request, response) => {
+app.get('/getFormationByGroup/:idGroup', (request, response) => {
 	const db = dbService.getDbServiceInstance();
 	const idGroup = request.params.idGroup;
 	const result = db.getFormationByGroup(idGroup);
